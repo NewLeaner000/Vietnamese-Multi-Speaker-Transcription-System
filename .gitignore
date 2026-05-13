@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Model weights
+*.pth
+*.bin
+*.safetensors
+core/der/checkpoints/
+core/asr/checkpoints/
+
+# Outputs
+output/
+
+# Logs
+debug/scratch/*.log
+debug/scratch/*.txt
+
+# OS
+.DS_Store
+Thumbs.db
