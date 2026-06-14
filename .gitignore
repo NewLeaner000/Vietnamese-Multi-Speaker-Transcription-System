@@ -1,0 +1,84 @@
+# =========================
+# VIMEET FULLSTACK GITIGNORE
+# =========================
+
+# 1. Environment & Secrets
+.env
+.env.*
+!.env.example
+secret.key
+
+# 2. Python & Backend
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv/
+venv/
+ENV/
+*.whl
+
+# 3. Database & Logs
+*.db
+*.sqlite
+*.sqlite3
+vimeet.db
+*.log
+debug/
+backend/app/ai_core/output/
+backend/uploads/
+
+# 4. Node.js & Frontend
+node_modules/
+frontend/dist/
+frontend/build/
+.npm/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 5. OS & Editor Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*~
+
+# 6. Legacy / Archive Folders
+_ARCHIVES/
+ui/
+
+# AI Models
+*.gguf
+*.pth
+*.safetensors
+*.bin
+*.zip
+checkpoints/
