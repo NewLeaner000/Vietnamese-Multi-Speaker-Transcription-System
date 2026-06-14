@@ -324,7 +324,7 @@ input, select, textarea {
 
   .main-content {
     flex-direction: column;
-    overflow-y: auto;
+    overflow: hidden;
     padding-bottom: 140px; /* Space for fixed bottom player */
   }
   
@@ -337,23 +337,30 @@ input, select, textarea {
     flex-shrink: 0;
   }
   
+  .mobile-tabs {
+    display: flex !important;
+    flex-shrink: 0;
+  }
+  
+  .mobile-hidden {
+    display: none !important;
+  }
+
   /* Reset flex ratio and force full width */
-  .left-pane {
-    flex: none !important;
+  .left-pane, .right-pane {
+    flex: 1 !important;
     width: 100% !important;
     height: auto !important;
     padding: 1rem !important;
-    overflow-y: visible !important;
+  }
+  
+  .left-pane {
     border-right: none;
     border-bottom: 1px solid var(--border-color);
+    overflow-y: auto !important;
   }
   
   .right-pane {
-    flex: none !important;
-    width: 100% !important;
-    height: 75vh !important; /* Cố định chiều cao cho Chatbot trên mobile */
-    min-height: 500px;
-    padding: 1rem !important;
     overflow-y: hidden !important; /* Ẩn scroll tổng, chỉ scroll nội bộ chat/summary */
     display: flex;
     flex-direction: column;

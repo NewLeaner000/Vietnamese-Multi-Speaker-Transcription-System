@@ -60,6 +60,7 @@ function App() {
   // Rename Job State
   const [editingJobId, setEditingJobId] = useState(null);
   const [newJobName, setNewJobName] = useState('');
+  const [mobileTab, setMobileTab] = useState('transcript'); // 'transcript' | 'chatbot'
   
   // Audio Player State
   const audioRef = useRef(null);
@@ -1054,8 +1055,18 @@ function App() {
           {/* VIEW 3: RESULTS (Notta Style) */}
           {(status === 'COMPLETED' || status === 'SUMMARIZING') && (
             <>
+              {/* Mobile Tabs */}
+              <div className="mobile-tabs" style={{ display: 'none', width: '100%', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-panel)' }}>
+                 <button onClick={() => setMobileTab('transcript')} style={{ flex: 1, padding: '1rem', background: mobileTab === 'transcript' ? 'var(--bg-hover)' : 'transparent', color: mobileTab === 'transcript' ? 'var(--accent-primary)' : 'var(--text-secondary)', fontWeight: 600, borderBottom: mobileTab === 'transcript' ? '2px solid var(--accent-primary)' : 'none' }}>
+                   {file ? file.name : (historyJobs.find(j => j.id === selectedJobId)?.filename || t('transcriptTab'))}
+                 </button>
+                 <button onClick={() => setMobileTab('chatbot')} style={{ flex: 1, padding: '1rem', background: mobileTab === 'chatbot' ? 'var(--bg-hover)' : 'transparent', color: mobileTab === 'chatbot' ? 'var(--accent-primary)' : 'var(--text-secondary)', fontWeight: 600, borderBottom: mobileTab === 'chatbot' ? '2px solid var(--accent-primary)' : 'none' }}>
+                   Chatbot & {t('summaryTab')}
+                 </button>
+              </div>
+
               {/* Left Column: Full Transcript */}
-                <div className="left-pane fade-in" style={{ paddingLeft: '4rem', paddingRight: '4rem' }}>
+              <div className={`left-pane fade-in ${mobileTab !== 'transcript' ? 'mobile-hidden' : ''}`} style={{ paddingLeft: '4rem', paddingRight: '4rem' }}>
                   <div style={{ maxWidth: '800px', margin: '0 auto' }}>
                     <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
                       {file ? file.name : (historyJobs.find(j => j.id === selectedJobId)?.filename || t('transcriptTab'))}
@@ -1111,7 +1122,7 @@ function App() {
               </div>
 
               {/* Right Column: AI Summary & Chatbot */}
-              <div className="right-pane fade-in" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div className={`right-pane fade-in ${mobileTab !== 'chatbot' ? 'mobile-hidden' : ''}`} style={{ display: 'flex', flexDirection: 'column' }}>
                 <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Bot size={20} color="var(--accent-primary)" /> Ani Assistant
                 </h2>
