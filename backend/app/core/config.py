@@ -15,6 +15,8 @@ class Settings(BaseSettings):
         "redis://localhost:6379/0"
     )
 
+    BREVO_API_KEY: str = os.getenv("BREVO_API_KEY", "")
+
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
         """Trả về connection string cho SQLModel/SQLAlchemy"""

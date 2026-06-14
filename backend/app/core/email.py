@@ -1,14 +1,13 @@
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import requests
+import json
 from app.core.config import settings
 
 def send_verification_email(to_email: str, code: str):
     """
-    Gửi email chứa mã xác thực OTP.
+    Gửi email chứa mã xác thực OTP thông qua Brevo HTTP API (Bypass cổng 587 bị chặn).
     """
-    if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
-        print("CẢNH BÁO: Chưa cấu hình SMTP_USER và SMTP_PASSWORD trong .env. Bỏ qua gửi mail thực tế.")
+    if not getattr(settings, 'BREVO_API_KEY', None):
+        print("CẢNH BÁO: Chưa cấu hình BREVO_API_KEY trong .env. Bỏ qua gửi mail thực tế.")
         print(f"Mã OTP giả lập cho {to_email}: {code}")
         return
 
@@ -26,20 +25,40 @@ def send_verification_email(to_email: str, code: str):
     </html>
     """
 
-    msg = MIMEMultipart()
-    msg['From'] = settings.SMTP_USER
-    msg['To'] = to_email
-    msg['Subject'] = subject
-    msg.attach(MIMEText(body, 'html'))
+    url = "https://api.brevo.com/v3/smtp/email"
+    
+    # Brevo yêu cầu email người gửi phải là email bạn đã xác minh (email đăng ký tài khoản Brevo)
+    # Chúng ta sẽ tận dụng luôn biến SMTP_USER cũ trong file .env (thường là Gmail của bạn)
+    sender_email = getattr(settings, 'SMTP_USER', 'noreply@ani-assistant.com')
+    if not sender_email:
+        sender_email = "noreply@ani-assistant.com"
+
+    payload = json.dumps({
+      "sender": {
+        "name": "Ani Assistant",
+        "email": sender_email
+      },
+      "to": [
+        {
+          "email": to_email
+        }
+      ],
+      "subject": subject,
+      "htmlContent": body
+    })
+    
+    headers = {
+      'accept': 'application/json',
+      'api-key': settings.BREVO_API_KEY,
+      'content-type': 'application/json'
+    }
 
     try:
-        # Cấu hình cho Gmail hoặc các dịch vụ SMTP sử dụng TLS (port 587)
-        server = smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT)
-        server.starttls()
-        server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-        server.sendmail(settings.SMTP_USER, to_email, msg.as_string())
-        server.quit()
-        print(f"Đã gửi email OTP tới {to_email}")
+        response = requests.post(url, headers=headers, data=payload)
+        response.raise_for_status()
+        print(f"Đã gửi email OTP tới {to_email} qua Brevo API")
     except Exception as e:
-        print(f"Lỗi khi gửi email: {e}")
+        print(f"Lỗi khi gửi email qua Brevo API: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Chi tiết lỗi từ Brevo: {e.response.text}")
         raise e
