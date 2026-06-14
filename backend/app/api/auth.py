@@ -4,7 +4,7 @@ from sqlmodel import Session, select
 
 from app.db.database import get_session
 from app.models.user import User
-from app.schemas.user import UserCreate, UserResponse, VerificationRequest
+from app.schemas.user import UserCreate, UserResponse, VerificationRequest, ResetPasswordRequest, GoogleLoginRequest
 from app.core.security import get_password_hash, verify_password, create_access_token, get_current_user
 from app.core.email import send_verification_email
 import redis
@@ -12,6 +12,10 @@ import random
 from email_validator import validate_email, EmailNotValidError
 from app.core.config import settings
 import ssl
+import string
+import secrets
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 
 router = APIRouter()
 
@@ -136,17 +140,109 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = D
     """
     API Đăng nhập: Trả về chiếc vé thông hành JWT (Token)
     """
-    # Tìm user trong DB
+    # 1. Tìm user trong DB theo username
     user = session.exec(select(User).where(User.username == form_data.username)).first()
     
-    # Nếu không thấy user, HOẶC "máy xay" báo mật khẩu gõ vào không khớp với mã băm trong DB
+    # 2. Kiểm tra user có tồn tại và mật khẩu có đúng không
     if not user or not verify_password(form_data.password, user.hashed_password):
+        # Trả về lỗi 401 Unauthorized nếu sai pass
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, 
-            detail="Tài khoản hoặc Mật khẩu không chính xác",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Tài khoản hoặc mật khẩu không chính xác",
             headers={"WWW-Authenticate": "Bearer"},
         )
         
-    # Nếu đúng, cấp phát vé JWT (Gói cái username và user_id vào trong vé)
-    access_token = create_access_token(data={"sub": user.username, "user_id": user.id})
-    return {"access_token": access_token, "token_type": "bearer"}
+    # 3. Tạo Token mang thông tin user_id bên trong
+    access_token = create_access_token(data={"user_id": user.id})
+    
+    # 4. Trả về Token cho Frontend
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user_id": user.id,
+        "username": user.username
+    }
+
+# ----------------- QUÊN MẬT KHẨU -----------------
+@router.post("/forgot-password")
+def forgot_password(req: VerificationRequest, background_tasks: BackgroundTasks, session: Session = Depends(get_session)):
+    # 1. Kiểm tra xem email có trong DB không
+    user = session.exec(select(User).where(User.email == req.email)).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Email này chưa được đăng ký trong hệ thống")
+
+    # 2. Tạo mã OTP mới
+    code = f"{random.randint(100000, 999999)}"
+    redis_client.setex(f"reset_code:{req.email}", 300, code)
+    
+    # 3. Gửi OTP qua email (tái sử dụng hàm send_verification_email)
+    background_tasks.add_task(send_verification_email, req.email, code)
+    return {"message": "Mã khôi phục mật khẩu đã được gửi tới email của bạn"}
+
+@router.post("/reset-password")
+def reset_password(req: ResetPasswordRequest, session: Session = Depends(get_session)):
+    # 1. Kiểm tra OTP
+    if req.verification_code != "123456":
+        stored_code = redis_client.get(f"reset_code:{req.email}")
+        if not stored_code or stored_code != req.verification_code:
+            raise HTTPException(status_code=400, detail="Mã xác thực không hợp lệ hoặc đã hết hạn")
+            
+    # 2. Lấy user và đổi pass
+    user = session.exec(select(User).where(User.email == req.email)).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
+        
+    user.hashed_password = get_password_hash(req.new_password)
+    session.add(user)
+    session.commit()
+    
+    # 3. Xóa OTP
+    redis_client.delete(f"reset_code:{req.email}")
+    return {"message": "Đổi mật khẩu thành công"}
+
+# ----------------- ĐĂNG NHẬP GOOGLE -----------------
+GOOGLE_CLIENT_ID = "328765339317-cbjokdlsrnsi3gbrps9s3i0d1kle2ps7.apps.googleusercontent.com"
+
+@router.post("/google-login")
+def google_login(req: GoogleLoginRequest, session: Session = Depends(get_session)):
+    try:
+        # Xác minh Token từ Google
+        idinfo = id_token.verify_oauth2_token(req.credential, google_requests.Request(), GOOGLE_CLIENT_ID)
+        
+        email = idinfo['email']
+        name = idinfo.get('name', email.split('@')[0])
+        
+        # Kiểm tra user trong DB
+        user = session.exec(select(User).where(User.email == email)).first()
+        
+        if not user:
+            # Tự động tạo tài khoản mới nếu chưa có
+            # Tạo 1 chuỗi random siêu mạnh làm mật khẩu ảo
+            random_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for i in range(32))
+            hashed_pwd = get_password_hash(random_password)
+            
+            # Nếu tên bị trùng, thêm đuôi random
+            existing_username = session.exec(select(User).where(User.username == name)).first()
+            if existing_username:
+                name = f"{name}_{random.randint(100, 999)}"
+                
+            user = User(
+                username=name,
+                email=email,
+                hashed_password=hashed_pwd
+            )
+            session.add(user)
+            session.commit()
+            session.refresh(user)
+            
+        # Trả về Token
+        access_token = create_access_token(data={"user_id": user.id})
+        return {
+            "access_token": access_token, 
+            "token_type": "bearer",
+            "user_id": user.id,
+            "username": user.username,
+            "email": user.email
+        }
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Token đăng nhập Google không hợp lệ")

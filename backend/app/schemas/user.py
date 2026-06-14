@@ -20,6 +20,14 @@ class VerificationRequest(BaseModel):
     """
     email: EmailStr
 
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    verification_code: str
+    new_password: str
+
+class GoogleLoginRequest(BaseModel):
+    credential: str
+
 from pydantic import ConfigDict
 
 class UserResponse(BaseModel):

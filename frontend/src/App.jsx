@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Upload, Play, Pause, CheckCircle, AlertCircle, Loader2, Users, Moon, Sun, Clock, FileText, Bot, MessageSquare, LogOut, History, Plus, Send, Trash2, RefreshCw, Languages } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
+import { Upload, Play, Pause, CheckCircle, AlertCircle, Loader2, Users, Moon, Sun, Clock, FileText, Bot, MessageSquare, LogOut, History, Plus, Send, Trash2, RefreshCw, Languages, X } from 'lucide-react';
 import { dictionaries } from './i18n';
 import './index.css';
 
@@ -23,6 +24,15 @@ function App() {
   const [verificationCode, setVerificationCode] = useState('');
   const [countdown, setCountdown] = useState(0);
   const [authError, setAuthError] = useState('');
+  
+  // Forgot Password State
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetStep, setResetStep] = useState(1); // 1: Email, 2: OTP + New Password
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetOtp, setResetOtp] = useState('');
+  const [resetNewPassword, setResetNewPassword] = useState('');
+  const [resetError, setResetError] = useState('');
+  const [resetMessage, setResetMessage] = useState('');
 
   // App State
   const [historyJobs, setHistoryJobs] = useState([]);
@@ -180,6 +190,63 @@ function App() {
       }
     } catch (err) {
       setAuthError(err.message);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const res = await fetch(`${API_BASE}/auth/google-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: credentialResponse.credential })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Google Login failed');
+      setToken(data.access_token);
+    } catch (err) {
+      setAuthError(err.message);
+    }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setResetError('');
+    setResetMessage('');
+    try {
+      if (resetStep === 1) {
+        const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: resetEmail })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed to send OTP');
+        setResetMessage(data.message);
+        setResetStep(2);
+      } else {
+        const res = await fetch(`${API_BASE}/auth/reset-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            email: resetEmail, 
+            verification_code: resetOtp,
+            new_password: resetNewPassword 
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed to reset password');
+        setResetMessage(data.message);
+        setTimeout(() => {
+          setShowForgotPassword(false);
+          setResetStep(1);
+          setResetEmail('');
+          setResetOtp('');
+          setResetNewPassword('');
+          setIsLoginView(true);
+        }, 2000);
+      }
+    } catch (err) {
+      setResetError(err.message);
     }
   };
 
@@ -539,8 +606,20 @@ function App() {
       <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
         <div className="upload-card fade-in" style={{ maxWidth: '400px', padding: '2rem' }}>
           <MessageSquare color="var(--accent-primary)" size={48} style={{ margin: '0 auto 1rem' }} />
-          <h2 style={{ marginBottom: '1.5rem' }}>{isLoginView ? t('loginTitle') : t('registerTitle')}</h2>
+          <h2 style={{ marginBottom: '1.5rem', textAlign: 'center' }}>{isLoginView ? t('loginTitle') : t('registerTitle')}</h2>
           
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => { setAuthError('Google Login Failed'); }}
+              useOneTap
+            />
+          </div>
+
+          <div style={{ textAlign: 'center', marginBottom: '1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+            hoặc đăng nhập bằng tài khoản
+          </div>
+
           <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <input 
               type="text" placeholder={t('username')} required
@@ -590,8 +669,69 @@ function App() {
             <span style={{ color: 'var(--accent-primary)', cursor: 'pointer', fontWeight: 500 }} onClick={() => { setIsLoginView(!isLoginView); setAuthError(''); }}>
               {isLoginView ? t('registerBtn') : t('loginBtn')}
             </span>
+            {isLoginView && (
+              <div style={{ marginTop: '0.5rem' }}>
+                <span style={{ color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: 500 }} onClick={() => setShowForgotPassword(true)}>
+                  Quên mật khẩu?
+                </span>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* FORGOT PASSWORD MODAL */}
+        {showForgotPassword && (
+          <div className="modal-overlay" style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+            backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+          }}>
+            <div className="modal-content fade-in" style={{
+              background: 'var(--bg-card)', padding: '2rem', borderRadius: '12px', width: '90%', maxWidth: '400px',
+              border: '1px solid var(--border-color)', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', position: 'relative'
+            }}>
+              <button 
+                onClick={() => { setShowForgotPassword(false); setResetStep(1); setResetError(''); setResetMessage(''); }} 
+                style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
+              ><X size={20}/></button>
+              
+              <h3 style={{ marginBottom: '1rem' }}>Khôi phục mật khẩu</h3>
+              
+              <form onSubmit={handleForgotPassword} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {resetStep === 1 ? (
+                  <>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Nhập email bạn đã đăng ký, chúng tôi sẽ gửi mã OTP gồm 6 chữ số.</p>
+                    <input 
+                      type="email" placeholder="Email của bạn" required
+                      value={resetEmail} onChange={e => setResetEmail(e.target.value)}
+                      style={{ padding: '0.8rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-hover)', color: 'var(--text-primary)' }}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Mã khôi phục đã được gửi tới <b>{resetEmail}</b></p>
+                    <input 
+                      type="text" placeholder="Mã OTP 6 số" required
+                      value={resetOtp} onChange={e => setResetOtp(e.target.value)}
+                      style={{ padding: '0.8rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-hover)', color: 'var(--text-primary)' }}
+                    />
+                    <input 
+                      type="password" placeholder="Mật khẩu mới" required
+                      value={resetNewPassword} onChange={e => setResetNewPassword(e.target.value)}
+                      style={{ padding: '0.8rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-hover)', color: 'var(--text-primary)' }}
+                    />
+                  </>
+                )}
+                
+                {resetError && <p style={{ color: 'var(--error)', fontSize: '0.85rem' }}>{resetError}</p>}
+                {resetMessage && <p style={{ color: 'var(--success)', fontSize: '0.85rem' }}>{resetMessage}</p>}
+                
+                <button type="submit" className="btn-primary" style={{ justifyContent: 'center' }}>
+                  {resetStep === 1 ? 'Gửi mã khôi phục' : 'Xác nhận đổi mật khẩu'}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
