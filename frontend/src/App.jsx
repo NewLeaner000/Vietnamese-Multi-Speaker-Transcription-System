@@ -711,11 +711,13 @@ function App() {
                     <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Mã khôi phục đã được gửi tới <b>{resetEmail}</b></p>
                     <input 
                       type="text" placeholder="Mã OTP 6 số" required
+                      autoComplete="one-time-code"
                       value={resetOtp} onChange={e => setResetOtp(e.target.value)}
                       style={{ padding: '0.8rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-hover)', color: 'var(--text-primary)' }}
                     />
                     <input 
                       type="password" placeholder="Mật khẩu mới" required
+                      autoComplete="new-password"
                       value={resetNewPassword} onChange={e => setResetNewPassword(e.target.value)}
                       style={{ padding: '0.8rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-hover)', color: 'var(--text-primary)' }}
                     />
