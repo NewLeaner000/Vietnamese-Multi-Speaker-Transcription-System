@@ -12,6 +12,15 @@ Dự án được thiết kế với kiến trúc hệ thống hiện đại, á
 
 ---
 
+## Trải nghiệm Trực tiếp (Live Demo)
+Bạn có thể truy cập hệ thống đang được triển khai thực tế tại:
+- **Đường dẫn:** [https://vietnamese-multi-speaker-transcript.vercel.app](https://vietnamese-multi-speaker-transcript.vercel.app)
+- **Tài khoản dùng thử (Demo Account):** 
+  - Username: `demouser`
+  - Password: `123`
+
+---
+
 ## Tính năng nổi bật
 - **Hệ thống Xác thực Chuẩn mực:** 
   - Đăng nhập/Đăng ký qua JWT Token.
