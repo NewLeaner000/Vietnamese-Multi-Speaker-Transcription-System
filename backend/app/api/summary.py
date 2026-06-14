@@ -14,21 +14,23 @@ router = APIRouter()
 
 
 @router.post("/summarize/{job_id}")
-def trigger_summarize(job_id: int, background_tasks: BackgroundTasks, session: Session = Depends(get_session)):
+def trigger_summarize(job_id: int):
     """API Kích hoạt Qwen Tóm tắt. Trả về ngay lập tức để giao diện không bị treo."""
-    job = session.get(Job, job_id)
-    if not job:
-        raise HTTPException(status_code=404, detail="Job không tồn tại")
-        
-    transcripts = session.exec(select(Transcript).where(Transcript.job_id == job_id)).all()
-    if not transcripts:
-        raise HTTPException(status_code=400, detail="Job này chưa có dữ liệu hội thoại. Hãy bóc băng lại!")
-        
-    # Xóa bản tóm tắt cũ nếu user muốn chạy lại
-    summary = session.exec(select(Summary).where(Summary.job_id == job_id)).first()
-    if summary:
-        session.delete(summary)
-        session.commit()
+    from app.db.database import engine
+    with Session(engine) as session:
+        job = session.get(Job, job_id)
+        if not job:
+            raise HTTPException(status_code=404, detail="Job không tồn tại")
+            
+        transcripts = session.exec(select(Transcript).where(Transcript.job_id == job_id)).all()
+        if not transcripts:
+            raise HTTPException(status_code=400, detail="Job này chưa có dữ liệu hội thoại. Hãy bóc băng lại!")
+            
+        # Xóa bản tóm tắt cũ nếu user muốn chạy lại
+        summary = session.exec(select(Summary).where(Summary.job_id == job_id)).first()
+        if summary:
+            session.delete(summary)
+            session.commit()
         
     # Gọi Celery Task để chạy trên máy local (nơi có GPU)
     from app.worker.tasks_ai import summarize_audio_task
@@ -100,16 +102,18 @@ class ChatRequest(BaseModel):
     message: str
 
 @router.post("/chat/{job_id}")
-def chat_with_meeting(job_id: int, req: ChatRequest, session: Session = Depends(get_session)):
+def chat_with_meeting(job_id: int, req: ChatRequest):
     """API Chat trực tiếp với Qwen sử dụng Context là Transcript và Persona là AI Career Coach"""
-    # 1. Load Transcript
-    transcripts = session.exec(select(Transcript).where(Transcript.job_id == job_id).order_by(Transcript.start_time)).all()
-    if not transcripts:
-        raise HTTPException(status_code=400, detail="Chưa có dữ liệu hội thoại.")
-        
-    conversation = ""
-    for t in transcripts:
-        conversation += f"[{t.speaker}]: {t.text}\n"
+    from app.db.database import engine
+    with Session(engine) as session:
+        # 1. Load Transcript
+        transcripts = session.exec(select(Transcript).where(Transcript.job_id == job_id).order_by(Transcript.start_time)).all()
+        if not transcripts:
+            raise HTTPException(status_code=400, detail="Chưa có dữ liệu hội thoại.")
+            
+        conversation = ""
+        for t in transcripts:
+            conversation += f"[{t.speaker}]: {t.text}\n"
 
     # 2. Đọc Hệ tư tưởng (System Persona) từ file ani_assistant_skill.md
     skill_file_path = os.path.join(os.path.dirname(__file__), "../../../ani_assistant_skill.md")

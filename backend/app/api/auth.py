@@ -25,7 +25,7 @@ redis_client = redis.from_url(
 )
 
 @router.post("/send-verification-code")
-def send_code(req: VerificationRequest, session: Session = Depends(get_session)):
+def send_code(req: VerificationRequest):
     # Kiểm tra Email có tồn tại thật (MX Records) hay không
     try:
         validate_email(req.email, check_deliverability=True)
@@ -33,9 +33,11 @@ def send_code(req: VerificationRequest, session: Session = Depends(get_session))
         raise HTTPException(status_code=400, detail=f"Email không hợp lệ hoặc không có thực: {str(e)}")
 
     # Check if email already exists
-    email_exists = session.exec(select(User).where(User.email == req.email)).first()
-    if email_exists:
-        raise HTTPException(status_code=400, detail="Email này đã được đăng ký")
+    from app.db.database import engine
+    with Session(engine) as session:
+        email_exists = session.exec(select(User).where(User.email == req.email)).first()
+        if email_exists:
+            raise HTTPException(status_code=400, detail="Email này đã được đăng ký")
     
     code = f"{random.randint(100000, 999999)}"
     redis_client.setex(f"verify_code:{req.email}", 300, code)
