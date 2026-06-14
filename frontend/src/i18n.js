@@ -10,6 +10,21 @@ export const dictionaries = {
     registerBtn: "Đăng ký",
     noAccount: "Chưa có tài khoản?",
     haveAccount: "Đã có tài khoản?",
+    orLoginWith: "hoặc đăng nhập bằng tài khoản",
+    forgotPassword: "Quên mật khẩu?",
+    
+    // Forgot Password Modal
+    recoverPasswordTitle: "Khôi phục mật khẩu",
+    resetEmailDesc: "Nhập email bạn đã đăng ký, chúng tôi sẽ gửi mã OTP gồm 6 chữ số.",
+    yourEmail: "Email của bạn",
+    resetCodeSentTo: "Mã khôi phục đã được gửi tới",
+    otpCode: "Mã OTP 6 số",
+    newPassword: "Mật khẩu mới",
+    sendResetCode: "Gửi mã khôi phục",
+    confirmResetPassword: "Xác nhận đổi mật khẩu",
+    waitCode: "Chờ",
+    sendCode: "Gửi mã",
+    verifyCodeDesc: "Nhập mã xác thực (6 số)",
     
     // Sidebar
     newMeeting: "Cuộc họp mới",
@@ -69,6 +84,21 @@ export const dictionaries = {
     registerBtn: "Register",
     noAccount: "Don't have an account?",
     haveAccount: "Already have an account?",
+    orLoginWith: "or login with account",
+    forgotPassword: "Forgot password?",
+    
+    // Forgot Password Modal
+    recoverPasswordTitle: "Recover Password",
+    resetEmailDesc: "Enter your registered email, we will send a 6-digit OTP code.",
+    yourEmail: "Your Email",
+    resetCodeSentTo: "Recovery code has been sent to",
+    otpCode: "6-digit OTP",
+    newPassword: "New Password",
+    sendResetCode: "Send Recovery Code",
+    confirmResetPassword: "Confirm New Password",
+    waitCode: "Wait",
+    sendCode: "Send code",
+    verifyCodeDesc: "Enter verification code (6 digits)",
     
     // Sidebar
     newMeeting: "New Meeting",

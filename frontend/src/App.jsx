@@ -628,7 +628,7 @@ function App() {
           </div>
 
           <div style={{ textAlign: 'center', marginBottom: '1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-            hoặc đăng nhập bằng tài khoản
+            {t('orLoginWith')}
           </div>
 
           <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -652,11 +652,11 @@ function App() {
                     disabled={countdown > 0 || !email}
                     style={{ whiteSpace: 'nowrap' }}
                   >
-                    {countdown > 0 ? `Chờ ${countdown}s` : 'Gửi mã'}
+                    {countdown > 0 ? `${t('waitCode')} ${countdown}s` : t('sendCode')}
                   </button>
                 </div>
                 <input 
-                  type="text" placeholder="Nhập mã xác thực (6 số)" required
+                  type="text" placeholder={t('verifyCodeDesc')} required
                   value={verificationCode} onChange={e => setVerificationCode(e.target.value)}
                   style={{ padding: '0.8rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-hover)', color: 'var(--text-primary)' }}
                 />
@@ -683,7 +683,7 @@ function App() {
             {isLoginView && (
               <div style={{ marginTop: '0.5rem' }}>
                 <span style={{ color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: 500 }} onClick={() => setShowForgotPassword(true)}>
-                  Quên mật khẩu?
+                  {t('forgotPassword')}
                 </span>
               </div>
             )}
@@ -705,29 +705,29 @@ function App() {
                 style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
               ><X size={20}/></button>
               
-              <h3 style={{ marginBottom: '1rem' }}>Khôi phục mật khẩu</h3>
+              <h3 style={{ marginBottom: '1rem' }}>{t('recoverPasswordTitle')}</h3>
               
               <form onSubmit={handleForgotPassword} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {resetStep === 1 ? (
                   <>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Nhập email bạn đã đăng ký, chúng tôi sẽ gửi mã OTP gồm 6 chữ số.</p>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{t('resetEmailDesc')}</p>
                     <input 
-                      type="email" placeholder="Email của bạn" required
+                      type="email" placeholder={t('yourEmail')} required
                       value={resetEmail} onChange={e => setResetEmail(e.target.value)}
                       style={{ padding: '0.8rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-hover)', color: 'var(--text-primary)' }}
                     />
                   </>
                 ) : (
                   <>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Mã khôi phục đã được gửi tới <b>{resetEmail}</b></p>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{t('resetCodeSentTo')} <b>{resetEmail}</b></p>
                     <input 
-                      type="text" placeholder="Mã OTP 6 số" required
+                      type="text" placeholder={t('otpCode')} required
                       autoComplete="one-time-code"
                       value={resetOtp} onChange={e => setResetOtp(e.target.value)}
                       style={{ padding: '0.8rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-hover)', color: 'var(--text-primary)' }}
                     />
                     <input 
-                      type="password" placeholder="Mật khẩu mới" required
+                      type="password" placeholder={t('newPassword')} required
                       autoComplete="new-password"
                       value={resetNewPassword} onChange={e => setResetNewPassword(e.target.value)}
                       style={{ padding: '0.8rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-hover)', color: 'var(--text-primary)' }}
@@ -739,7 +739,7 @@ function App() {
                 {resetMessage && <p style={{ color: 'var(--success)', fontSize: '0.85rem' }}>{resetMessage}</p>}
                 
                 <button type="submit" className="btn-primary" style={{ justifyContent: 'center' }}>
-                  {resetStep === 1 ? 'Gửi mã khôi phục' : 'Xác nhận đổi mật khẩu'}
+                  {resetStep === 1 ? t('sendResetCode') : t('confirmResetPassword')}
                 </button>
               </form>
             </div>
