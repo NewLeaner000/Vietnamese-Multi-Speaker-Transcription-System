@@ -176,7 +176,7 @@ def forgot_password(req: VerificationRequest, background_tasks: BackgroundTasks,
     redis_client.setex(f"reset_code:{req.email}", 300, code)
     
     # 3. Gửi OTP qua email (tái sử dụng hàm send_verification_email)
-    background_tasks.add_task(send_verification_email, req.email, code)
+    background_tasks.add_task(send_verification_email, req.email, code, True)
     return {"message": "Mã khôi phục mật khẩu đã được gửi tới email của bạn"}
 
 @router.post("/reset-password")

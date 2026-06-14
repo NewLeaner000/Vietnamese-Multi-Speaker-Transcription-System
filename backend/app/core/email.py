@@ -2,7 +2,7 @@ import requests
 import json
 from app.core.config import settings
 
-def send_verification_email(to_email: str, code: str):
+def send_verification_email(to_email: str, code: str, is_reset: bool = False):
     """
     Gửi email chứa mã xác thực OTP thông qua Brevo HTTP API (Bypass cổng 587 bị chặn).
     """
@@ -11,12 +11,18 @@ def send_verification_email(to_email: str, code: str):
         print(f"Mã OTP giả lập cho {to_email}: {code}")
         return
 
-    subject = "Mã xác thực tài khoản Ani Assistant"
+    if is_reset:
+        subject = "Mã khôi phục mật khẩu tài khoản Ani Assistant"
+        body_text = "Bạn vừa yêu cầu khôi phục mật khẩu. Đây là mã xác thực (OTP) của bạn:"
+    else:
+        subject = "Mã xác thực tài khoản Ani Assistant"
+        body_text = "Đây là mã xác thực (OTP) để hoàn tất việc đăng ký tài khoản của bạn:"
+
     body = f"""
     <html>
       <body>
-        <h2>Chào mừng bạn đến với Ani Assistant</h2>
-        <p>Đây là mã xác thực (OTP) để hoàn tất việc đăng ký tài khoản của bạn:</p>
+        <h2>Chào bạn,</h2>
+        <p>{body_text}</p>
         <h1 style="color: #007bff; letter-spacing: 2px;">{code}</h1>
         <p>Mã này sẽ hết hạn trong 5 phút. Vui lòng không chia sẻ mã này cho bất kỳ ai.</p>
         <br/>
