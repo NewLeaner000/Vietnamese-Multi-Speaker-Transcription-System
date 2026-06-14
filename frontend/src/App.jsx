@@ -3,7 +3,8 @@ import { Upload, Play, Pause, CheckCircle, AlertCircle, Loader2, Users, Moon, Su
 import { dictionaries } from './i18n';
 import './index.css';
 
-const API_BASE = `http://${window.location.hostname}:8000/api`;
+// Sử dụng biến môi trường VITE_API_URL khi chạy trên mạng (Vercel), nếu không có thì chạy mặc định ở Localhost
+const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8000/api`;
 
 function App() {
   // Theme & Auth & I18N State
