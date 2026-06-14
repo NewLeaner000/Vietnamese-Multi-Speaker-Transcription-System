@@ -338,17 +338,25 @@ input, select, textarea {
   }
   
   /* Reset flex ratio and force full width */
-  .left-pane, .right-pane {
+  .left-pane {
     flex: none !important;
     width: 100% !important;
     height: auto !important;
     padding: 1rem !important;
     overflow-y: visible !important;
-  }
-  
-  .left-pane {
     border-right: none;
     border-bottom: 1px solid var(--border-color);
+  }
+  
+  .right-pane {
+    flex: none !important;
+    width: 100% !important;
+    height: 75vh !important; /* Cố định chiều cao cho Chatbot trên mobile */
+    min-height: 500px;
+    padding: 1rem !important;
+    overflow-y: hidden !important; /* Ẩn scroll tổng, chỉ scroll nội bộ chat/summary */
+    display: flex;
+    flex-direction: column;
   }
   
   /* Make audio player responsive */
