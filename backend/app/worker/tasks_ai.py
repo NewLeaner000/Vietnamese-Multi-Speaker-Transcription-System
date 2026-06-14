@@ -21,11 +21,18 @@ def summarize_audio_task(self, job_id: int):
         for t in transcripts:
             conversation += f"[{t.speaker}]: {t.text}\n"
             
-        prompt = f"""Bạn là một trợ lý AI chuyên nghiệp có nhiệm vụ tóm tắt biên bản cuộc họp.
-Hãy đọc đoạn hội thoại sau và tóm tắt lại bằng tiếng Việt theo đúng 3 mục sau:
-1. Khái quát cuộc họp: (Cuộc họp nói về chủ đề gì, mục đích chung là gì)
-2. Các quyết định đã chốt: (Những gì mọi người đã đồng ý và chốt lại)
-3. Việc cần làm của từng người: (Liệt kê rõ tên người và công việc tương ứng)
+        prompt = f"""Bạn là một trợ lý AI chuyên nghiệp chuyên tóm tắt biên bản cuộc họp.
+Hãy đọc đoạn hội thoại sau và tóm tắt lại bằng tiếng Việt.
+YÊU CẦU BẮT BUỘC: Bạn PHẢI sử dụng định dạng Markdown để trình bày bản tóm tắt thật đẹp mắt, theo đúng 3 phần sau:
+
+### 📝 Khái quát cuộc họp
+(Viết 1-2 đoạn văn tóm tắt nội dung chính và mục đích của cuộc họp)
+
+### 🎯 Các quyết định đã chốt
+(Sử dụng gạch đầu dòng `-` để liệt kê các quyết định quan trọng)
+
+### ✅ Việc cần làm
+(Sử dụng gạch đầu dòng `-` để liệt kê rõ nhiệm vụ. Tên người nhận nhiệm vụ PHẢI được **bôi đậm**)
 
 --- ĐOẠN HỘI THOẠI ---
 {conversation}

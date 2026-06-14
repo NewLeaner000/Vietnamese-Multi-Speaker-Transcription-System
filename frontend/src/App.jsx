@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { Upload, Play, Pause, CheckCircle, AlertCircle, Loader2, Users, Moon, Sun, Clock, FileText, Bot, MessageSquare, LogOut, History, Plus, Send, Trash2, RefreshCw, Languages } from 'lucide-react';
 import { dictionaries } from './i18n';
 import './index.css';
@@ -945,8 +946,8 @@ function App() {
                     {/* Summary Card */}
                     <div className="summary-card" style={{ flexShrink: 0, maxHeight: '40%', overflowY: 'auto', marginBottom: '1rem' }}>
                       <div className="summary-title"><FileText size={18} /> {t('summaryTab')}</div>
-                      <div style={{ color: 'var(--text-primary)', fontSize: '0.95rem', whiteSpace: 'pre-line' }}>
-                        {summary || t('emptyHistory')}
+                      <div className="markdown-content" style={{ color: 'var(--text-primary)', fontSize: '0.95rem' }}>
+                        {summary ? <ReactMarkdown>{summary}</ReactMarkdown> : t('emptyHistory')}
                       </div>
                     </div>
 
