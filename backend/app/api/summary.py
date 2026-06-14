@@ -36,13 +36,8 @@ def trigger_summarize(job_id: int):
     from app.worker.tasks_ai import summarize_audio_task
     task = summarize_audio_task.delay(job_id)
     
-    # Đứng chờ (block) tối đa 120 giây để lấy kết quả
-    try:
-        task.get(timeout=120)
-    except Exception as e:
-        print(f"Summary timeout or error: {e}")
-        
-    return {"message": "Đã tóm tắt thành công!"}
+    # Trả về ngay lập tức, Frontend sẽ tự động Polling (Hỏi liên tục) để lấy kết quả
+    return {"message": "Đang tiến hành tóm tắt AI...", "task_id": task.id}
 
 @router.get("/jobs/{job_id}/summary")
 def get_job_summary(job_id: int, session: Session = Depends(get_session)):
