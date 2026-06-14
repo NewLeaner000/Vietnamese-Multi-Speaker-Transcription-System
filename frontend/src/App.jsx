@@ -686,7 +686,7 @@ function App() {
             backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
           }}>
             <div className="modal-content fade-in" style={{
-              background: 'var(--bg-card)', padding: '2rem', borderRadius: '12px', width: '90%', maxWidth: '400px',
+              background: 'var(--bg-panel)', padding: '2rem', borderRadius: '12px', width: '90%', maxWidth: '400px',
               border: '1px solid var(--border-color)', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', position: 'relative'
             }}>
               <button 
