@@ -67,10 +67,9 @@ app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(upload.router, prefix="/api/audio", tags=["Audio Processing"])
 app.include_router(summary.router, prefix="/api/audio", tags=["AI Summary"])
 
-# Cấu hình phục vụ file Static (Âm thanh)
+# Đã xóa cấu hình phục vụ file Static (Âm thanh) qua /uploads để ngăn rò rỉ IDOR
 import os
 os.makedirs("uploads", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 @app.get("/")
 def read_root():

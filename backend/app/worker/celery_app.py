@@ -21,8 +21,8 @@ celery_app.conf.update(
     enable_utc=True,
     
     # Hỗ trợ kết nối bảo mật TLS/SSL (bắt buộc cho Upstash Redis)
-    broker_use_ssl={'ssl_cert_reqs': ssl.CERT_NONE} if redis_url.startswith("rediss://") else None,
-    redis_backend_use_ssl={'ssl_cert_reqs': ssl.CERT_NONE} if redis_url.startswith("rediss://") else None,
+    broker_use_ssl={'ssl_cert_reqs': ssl.CERT_REQUIRED} if redis_url.startswith("rediss://") else None,
+    redis_backend_use_ssl={'ssl_cert_reqs': ssl.CERT_REQUIRED} if redis_url.startswith("rediss://") else None,
     
     # [MLOps KNOWLEDGE] QUAN TRỌNG NHẤT: 
     # Ép Celery chỉ nhận và chạy đúng 1 task tại một thời điểm trên 1 máy tính.

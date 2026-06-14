@@ -21,7 +21,7 @@ is_secure = settings.REDIS_URL.startswith("rediss://")
 redis_client = redis.from_url(
     settings.REDIS_URL, 
     decode_responses=True,
-    ssl_cert_reqs=ssl.CERT_NONE if is_secure else None
+    ssl_cert_reqs=ssl.CERT_REQUIRED if is_secure else None
 )
 
 @router.post("/send-verification-code")
