@@ -1,158 +1,337 @@
 <div align="center">
-  <h1>Vimeet - Hệ Thống Bóc Băng & Tóm Tắt Cuộc Họp Bằng AI</h1>
-  <p><i>Xử lý âm thanh đa diễn giả, độ chính xác cao, bảo mật tuyệt đối.</i></p>
+  <h1>Vimeet</h1>
+  <h3>Vietnamese Multi-Speaker Meeting Transcription & Summarization System</h3>
+  <p><i>End-to-end AI pipeline — Speaker Diarization, ASR, LLM Summarization, and RAG-powered Chatbot</i></p>
+
+  <br/>
+
+  <a href="https://vietnamese-multi-speaker-transcript.vercel.app">Live Demo</a> · Demo Account: <code>demouser</code> / <code>123</code>
 </div>
 
 ---
 
-## Giai đoạn 1: Giới thiệu
-**Vimeet** (Vietnamese Meeting) là một giải pháp toàn diện giúp doanh nghiệp và cá nhân tự động hóa việc "bóc băng" (transcription) các cuộc họp dài. Hệ thống có khả năng nhận diện nhiều giọng nói khác nhau (Speaker Diarization), chuyển đổi giọng nói thành văn bản với độ chính xác cao, và sử dụng AI để tóm tắt các ý chính, đưa ra Action Items (hành động cần làm).
+## Overview
 
-Dự án được thiết kế với kiến trúc hệ thống hiện đại, áp dụng Message Queue (Celery + Redis) để xử lý các tác vụ nền (Background Processing) nặng về âm thanh, đảm bảo máy chủ API không bị thắt cổ chai và trải nghiệm người dùng luôn mượt mà.
+**Vimeet** is a production-grade system that transforms raw audio recordings of Vietnamese meetings into structured, searchable transcripts with AI-generated summaries. It solves a critical enterprise pain point: manually transcribing multi-speaker meetings is slow, expensive, and error-prone.
 
----
+The system chains four on-device AI models into a single automated pipeline:
 
-## Trải nghiệm Trực tiếp (Live Demo)
-Bạn có thể truy cập hệ thống đang được triển khai thực tế tại:
-- **Đường dẫn:** [https://vietnamese-multi-speaker-transcript.vercel.app](https://vietnamese-multi-speaker-transcript.vercel.app)
-- **Tài khoản dùng thử (Demo Account):** 
-  - Username: `demouser`
-  - Password: `123`
+| Stage | Model | Purpose |
+|-------|-------|---------|
+| 1. Diarization | DiariZen (WavLM-Large) | Identify *who* is speaking and *when* |
+| 2. ASR | PhoWhisper (CTranslate2) | Convert speech segments to Vietnamese text |
+| 3. Summarization | Qwen 2.5-7B (GGUF/llama.cpp) | Generate structured meeting minutes |
+| 4. Chatbot | Qwen 2.5-7B + FAISS RAG | Answer questions about the transcript |
 
----
-
-## Tính năng nổi bật
-- **Hệ thống Xác thực Chuẩn mực:** 
-  - Đăng nhập/Đăng ký qua JWT Token.
-  - Tích hợp gửi mã OTP qua Email (Brevo API).
-  - Tích hợp Google OAuth 2.0 (One Tap) đăng nhập siêu tốc.
-  - Tích hợp các lớp phòng thủ: Chống Brute-force, Rate Limiting, Token Blacklisting.
-- **Xử lý Âm thanh Đa diễn giả:** Phân biệt được ai đang nói câu gì trong cuộc họp.
-- **Tóm tắt Thông minh:** Ứng dụng LLM để tóm tắt cuộc họp, trích xuất các quyết định và phân công công việc tự động.
-- **Kiến trúc Bất đồng bộ (Asynchronous):** Người dùng có thể upload file và rời đi. Hệ thống tự xử lý ngầm dưới nền.
-- **Bảo mật Dữ liệu (Row Level Security):** Mỗi người dùng chỉ được phép truy cập vào dữ liệu cuộc họp của chính mình. Phân quyền truy cập tài nguyên (IDOR Prevention) được cấu hình chặt chẽ.
+All inference runs locally on a single NVIDIA GPU (tested on RTX 4060 8GB). No cloud AI APIs are required for the core pipeline.
 
 ---
 
-## Công nghệ sử dụng (Tech Stack)
-
-### Frontend (Client-side)
-- Framework: React.js + Vite.
-- Styling: Vanilla CSS (Sử dụng CSS Variables để làm giao diện Dark Mode / Glassmorphism).
-- Authentication: @react-oauth/google.
-- Deployment: Vercel.
-
-### Backend (Server-side)
-- Framework: FastAPI (Python) - Chuẩn ASGI tốc độ cao.
-- Database ORM: SQLModel (kết hợp SQLAlchemy và Pydantic).
-- Database Engine: PostgreSQL (Host trên Supabase).
-- Message Broker & Caching: Redis (Host trên Upstash).
-- Background Worker: Celery (Đảm nhiệm hàng đợi xử lý âm thanh).
-- Deployment: Render.
-
----
-
-## Luồng hoạt động hệ thống (System Flow)
-
-Dưới đây là sơ đồ khối luồng xử lý (Flowchart). Bạn có thể copy mã Mermaid dưới đây và dán vào phần "Insert -> Advanced -> Mermaid" của công cụ **Draw.io** để tự động tạo sơ đồ chuyên nghiệp.
+## System Architecture
 
 ```mermaid
-flowchart TD
-    %% Khối Frontend
-    subgraph Client [Frontend - React.js]
-        UI[Giao diện Người dùng]
-        AuthUI[Giao diện Đăng nhập / Đăng ký]
+graph TB
+    subgraph Client ["Frontend (React + Vite — Vercel)"]
+        UI["Web UI<br/>Auth · Upload · Transcript Viewer · Chatbot"]
     end
 
-    %% Khối Backend
-    subgraph Server [Backend - FastAPI]
-        AuthAPI[API Xác thực]
-        UploadAPI[API Upload Âm thanh]
-        ResultAPI[API Lấy kết quả]
+    subgraph API ["API Server (FastAPI — Render)"]
+        Auth["Auth API<br/>JWT · Google OAuth · OTP"]
+        Upload["Upload API<br/>File validation · Supabase Storage"]
+        Result["Result API<br/>Transcript · Summary · Chat"]
     end
 
-    %% Khối Database & Queue
-    subgraph Infra [Cơ sở hạ tầng]
-        DB[(PostgreSQL - Supabase)]
-        Cache[(Redis - Upstash)]
+    subgraph Queue ["Message Queue"]
+        Redis[("Redis (Upstash)<br/>Celery Broker · OTP Cache · Token Blacklist")]
     end
 
-    %% Khối Worker
-    subgraph Worker [Background Processing]
-        Celery[Celery Worker]
-        AI_Audio[AI Model: Transcription & Diarization]
-        AI_Text[AI Model: Tóm tắt LLM]
+    subgraph Worker ["GPU Worker (Celery — Local)"]
+        Task["Celery Task Orchestrator"]
+        DER["Stage 1: DiariZen<br/>Speaker Diarization"]
+        ASR["Stage 2: PhoWhisper<br/>Speech-to-Text"]
+        LLM["Stage 3: Qwen 2.5-7B<br/>Summarization"]
+        RAG["Stage 4: FAISS + Qwen<br/>RAG Chatbot"]
     end
 
-    %% Luồng xác thực
-    AuthUI -- Gửi Tài khoản / Google Token --> AuthAPI
-    AuthAPI -- Kiểm tra / Lưu dữ liệu --> DB
-    AuthAPI -- Trả về JWT Token --> UI
+    subgraph Storage ["Persistent Storage"]
+        DB[("PostgreSQL (Supabase)<br/>Users · Jobs · Transcripts · Summaries")]
+        S3[("Supabase Storage<br/>Audio Files · Enrollment Samples")]
+    end
 
-    %% Luồng Upload
-    UI -- Gửi Audio + JWT --> UploadAPI
-    UploadAPI -- Lưu bản ghi PENDING --> DB
-    UploadAPI -- Đẩy Task ID --> Cache
-    UploadAPI -- Trả về ID lập tức --> UI
+    UI -- "HTTPS + JWT" --> Auth
+    UI -- "Upload Audio" --> Upload
+    UI -- "Poll / Chat" --> Result
 
-    %% Luồng Worker
-    Celery -- Kéo Task ID --> Cache
-    Celery -- Chạy phân tích âm thanh --> AI_Audio
-    AI_Audio -- Lưu Transcript & Trạng thái SUCCESS --> DB
-    Celery -- Chạy tổng hợp nội dung --> AI_Text
-    AI_Text -- Lưu Summary --> DB
+    Auth <--> DB
+    Auth <--> Redis
+    Upload --> S3
+    Upload -- "Create Job (PENDING)" --> DB
+    Upload -- "Dispatch Task" --> Redis
 
-    %% Luồng lấy kết quả
-    UI -- Polling kiểm tra (Kèm JWT) --> ResultAPI
-    ResultAPI -- Xác minh RLS (Quyền sở hữu) --> DB
-    DB -- Trả về Transcript + Summary --> ResultAPI
-    ResultAPI -- Hiển thị dữ liệu --> UI
+    Redis -- "Dequeue" --> Task
+    Task --> DER --> ASR --> LLM
+    Task -.-> RAG
+    DER -- "RTTM" --> ASR
+    ASR -- "CSV" --> LLM
+    LLM -- "Save Results" --> DB
+    RAG <--> DB
+
+    Result <--> DB
+    Result --> UI
 ```
 
 ---
 
-## Kiến trúc Bảo mật (Security Implementations)
-- Mật khẩu: Băm một chiều bằng thuật toán bcrypt. Không lưu bản rõ (plaintext).
-- Phân mảnh tài khoản: Hệ thống chuẩn hóa (lowercase, strip) mọi email đầu vào để chống tạo 2 tài khoản trùng lặp do phân biệt hoa/thường.
-- Chống IDOR (Insecure Direct Object Reference): File âm thanh gốc được giấu kín khỏi thư mục public và chỉ cấp quyền tải về thông qua API riêng có gắn JWT Header.
-- Anti Brute-force & DoS: 
-  - Khóa tài khoản 15 phút nếu nhập sai OTP 5 lần (áp dụng ở Đăng ký & Quên mật khẩu).
-  - Rate limit giới hạn thời gian (Cooldown 60 giây) giữa 2 lần bấm nút gửi Email OTP.
-  - Sử dụng Token Blacklist lưu trên Redis để vô hiệu hóa hoàn toàn Access Token ngay khi người dùng Đăng xuất.
+## AI Pipeline — Detailed Flow
+
+This is the core engineering work. Each stage is a separate Python module under `backend/app/ai_core/`, orchestrated by a Celery task.
+
+```mermaid
+flowchart LR
+    subgraph INPUT ["Input"]
+        Audio["Raw Audio<br/>(any format)"]
+        Enroll["Enrollment Samples<br/>(optional)"]
+    end
+
+    subgraph PREPROCESS ["Stage 0 — Preprocessing"]
+        Download["Download from<br/>Supabase Storage"]
+        Normalize["FFmpeg Normalize<br/>→ 16kHz Mono WAV"]
+    end
+
+    subgraph DER ["Stage 1 — Speaker Diarization"]
+        DiariZen["DiariZen<br/>(WavLM-Large backbone)<br/>Speaker segmentation +<br/>Agglomerative clustering"]
+        RTTM["Output: RTTM file<br/>(who spoke when)"]
+    end
+
+    subgraph ASR ["Stage 2 — Speech Recognition"]
+        Segment["Segment audio<br/>by RTTM timestamps"]
+        Whisper["PhoWhisper<br/>(CTranslate2 INT8)<br/>Vietnamese ASR"]
+        CSV["Output: CSV<br/>(speaker, start, end, text)"]
+    end
+
+    subgraph LLM ["Stage 3 — Summarization"]
+        Filter["Hallucination filter<br/>+ Deduplication"]
+        Qwen["Qwen 2.5-7B-Instruct<br/>(GGUF Q4_K_M via llama.cpp)<br/>GPU-accelerated"]
+        Summary["Output: Structured summary<br/>(overview, decisions, action items)"]
+    end
+
+    subgraph RAG ["Stage 4 — Chatbot (on-demand)"]
+        Embed["Embedding<br/>(Gemini API or<br/>Local MiniLM-L12)"]
+        FAISS["FAISS Vector Index"]
+        Retrieve["Speaker-aware<br/>Retrieval"]
+        Answer["Qwen 2.5-7B<br/>Generate Answer"]
+    end
+
+    Audio --> Download --> Normalize
+    Enroll --> Download
+    Normalize --> DiariZen --> RTTM
+    RTTM --> Segment --> Whisper --> CSV
+    CSV --> Filter --> Qwen --> Summary
+    CSV -.-> Embed --> FAISS --> Retrieve --> Answer
+```
+
+### Stage 0 — Audio Preprocessing
+- Downloads audio from Supabase cloud storage to local worker
+- Converts any input format to 16kHz mono WAV using FFmpeg/soundfile
+- If enrollment samples are provided, each sample is also normalized for speaker verification
+
+### Stage 1 — Speaker Diarization (DiariZen)
+- **Model**: `BUT-FIT/diarizen-wavlm-large-s80-md-v2` — state-of-the-art neural diarization
+- **Process**: WavLM extracts frame-level embeddings → DiariZen predicts speaker activity → Agglomerative clustering assigns speaker IDs
+- **Enrollment support**: When voice samples are provided, the system matches detected speakers to known identities
+- **Output**: RTTM file mapping each time segment to a speaker label
+
+### Stage 2 — Automatic Speech Recognition (PhoWhisper)
+- **Model**: Fine-tuned PhoWhisper, quantized to INT8 via CTranslate2 for 3x inference speedup
+- **Process**: Audio is sliced according to RTTM timestamps → each segment is decoded independently → results are merged into a single CSV with columns `(speaker, start, end, predicted_text)`
+- **Optimizations**: Retry logic for short/noisy segments, probability-based filtering, hallucination detection
+
+### Stage 3 — Meeting Summarization (Qwen 2.5)
+- **Model**: `Qwen2.5-7B-Instruct-Q4_K_M.gguf` running on llama.cpp with full GPU offload
+- **Pre-processing**: ASR output is filtered for hallucinated text (known Vietnamese ASR artifacts), deduplicated by time-overlap + text similarity
+- **Prompt engineering**: Structured prompt forces Markdown output with sections: Overview, Key Decisions, Action Items (with assignee names bolded)
+
+### Stage 4 — RAG Chatbot
+- **Architecture**: Retrieval-Augmented Generation using LangChain + FAISS
+- **Embedding**: Dual backend — Gemini API (cloud) or `paraphrase-multilingual-MiniLM-L12-v2` (local)
+- **Speaker-aware retrieval**: Detects speaker names in questions → filters FAISS results by speaker metadata → provides targeted context
+- **Conversation memory**: Last 6 messages maintained in chat history for context continuity
 
 ---
 
-## Hướng dẫn chạy môi trường Local (Local Setup)
+## Security Architecture
 
-### 1. Chuẩn bị môi trường
-Yêu cầu hệ thống đã cài đặt: Python 3.10+, Node.js 18+, và chuẩn bị API Key của Supabase (Postgres), Upstash (Redis), Brevo (Email).
+```mermaid
+flowchart LR
+    subgraph AUTH ["Authentication Layer"]
+        JWT["JWT Token<br/>(HS256, 7-day expiry)"]
+        Google["Google OAuth 2.0<br/>(One Tap)"]
+        OTP["Email OTP<br/>(Brevo API, 5-min TTL)"]
+    end
 
-### 2. Cài đặt Backend
+    subgraph DEFENSE ["Defense Layer"]
+        BF["Anti Brute-force<br/>Lock after 5 failed OTP attempts<br/>(15-min cooldown via Redis)"]
+        RL["Rate Limiting<br/>60s cooldown between<br/>OTP send requests"]
+        BL["Token Blacklist<br/>Immediate invalidation<br/>on logout (Redis)"]
+        IDOR["IDOR Prevention<br/>Audio served via authenticated<br/>API endpoint, not public URL"]
+        RLS["Row Level Security<br/>PostgreSQL RLS enforced<br/>on all tables"]
+    end
+
+    subgraph DATA ["Data Layer"]
+        Hash["bcrypt Password Hashing<br/>(one-way, no plaintext)"]
+        Email["Email Normalization<br/>(lowercase + strip)"]
+        CORS["CORS Whitelist<br/>(localhost + production domains only)"]
+    end
+
+    AUTH --> DEFENSE --> DATA
+```
+
+| Threat | Mitigation | Implementation |
+|--------|------------|----------------|
+| Credential stuffing | bcrypt + rate limiting | `passlib[bcrypt]` + Redis cooldown |
+| Session hijacking | Token blacklist on logout | Redis SET with TTL |
+| IDOR (data leak) | Ownership verification on every query | SQL `WHERE user_id = current_user` |
+| Email spoofing | Real-time MX record validation | `email-validator` library |
+| Brute-force OTP | Account lockout after 5 attempts | Redis counter with 15-min expiry |
+
+---
+
+## Tech Stack
+
+| Layer | Technology | Rationale |
+|-------|-----------|-----------|
+| **Frontend** | React 18 + Vite | Fast HMR, SPA with component architecture |
+| **Styling** | Vanilla CSS + CSS Variables | Dark/Light theme, glassmorphism, responsive (mobile-first) |
+| **i18n** | Custom `t()` function | Vietnamese / English toggle, zero external dependency |
+| **API Server** | FastAPI (Python 3.10) | Async ASGI, automatic OpenAPI docs, type-safe with Pydantic |
+| **ORM** | SQLModel | SQLAlchemy + Pydantic hybrid — single model for DB and API |
+| **Database** | PostgreSQL (Supabase) | Row Level Security, managed hosting, real-time capabilities |
+| **File Storage** | Supabase Storage | S3-compatible, integrated with PostgreSQL auth |
+| **Message Queue** | Redis (Upstash) | Celery broker + OTP cache + token blacklist |
+| **Task Queue** | Celery | Distributed task processing, progress tracking via `update_state` |
+| **Diarization** | DiariZen + WavLM-Large | SOTA neural diarization with enrollment support |
+| **ASR** | PhoWhisper + CTranslate2 | Vietnamese-optimized Whisper, INT8 quantized |
+| **LLM** | Qwen 2.5-7B-Instruct (GGUF) | Local inference via llama.cpp, GPU-accelerated |
+| **RAG** | LangChain + FAISS | Speaker-aware retrieval, dual embedding backend |
+| **Deployment** | Vercel (FE) + Render (API) + Local GPU (Worker) | Hybrid cloud-edge architecture |
+
+---
+
+## Project Structure
+
+```
+vimeet/
+├── frontend/                    # React SPA
+│   ├── src/
+│   │   ├── App.jsx              # Main application (1200+ lines)
+│   │   ├── i18n.js              # Vietnamese/English dictionaries
+│   │   ├── index.css            # Design system + responsive breakpoints
+│   │   └── main.jsx             # React entry point
+│   └── index.html
+│
+├── backend/                     # FastAPI + Celery
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── auth.py          # Authentication endpoints (JWT, Google, OTP)
+│   │   │   ├── upload.py        # Audio upload + job creation
+│   │   │   └── summary.py       # Summary retrieval + chat API
+│   │   ├── ai_core/
+│   │   │   ├── asr/
+│   │   │   │   └── engine.py    # PhoWhisper ASR engine (CTranslate2)
+│   │   │   ├── der/
+│   │   │   │   └── engine.py    # DiariZen diarization engine
+│   │   │   ├── qwen/
+│   │   │   │   └── engine.py    # Qwen summarization engine (llama.cpp)
+│   │   │   ├── rag/
+│   │   │   │   └── engine.py    # FAISS RAG chatbot engine
+│   │   │   ├── asr_runner.py    # ASR orchestration bridge
+│   │   │   ├── der_infer_bridge.py    # Diarization bridge
+│   │   │   ├── qwen_infer_bridge.py   # Summarization bridge
+│   │   │   └── pipeline_config.py     # Model paths + defaults
+│   │   ├── core/
+│   │   │   ├── security.py      # JWT, bcrypt, token blacklist
+│   │   │   ├── storage.py       # Supabase file I/O
+│   │   │   ├── email.py         # Brevo OTP sender
+│   │   │   ├── cleanup.py       # Async trash cleanup loop
+│   │   │   └── config.py        # Environment settings
+│   │   ├── models/              # SQLModel ORM (User, Job, Transcript, Summary)
+│   │   ├── schemas/             # Pydantic request/response schemas
+│   │   ├── worker/
+│   │   │   ├── celery_app.py    # Celery configuration
+│   │   │   ├── tasks.py         # Main transcription pipeline task
+│   │   │   └── tasks_ai.py      # Summarization + chat tasks
+│   │   └── main.py              # FastAPI app entry point
+│   └── requirements.txt
+│
+└── requirements.txt             # AI/ML dependencies (PyTorch, etc.)
+```
+
+---
+
+## Getting Started
+
+### Prerequisites
+- Python 3.10+, Node.js 18+, NVIDIA GPU (CUDA 12.1+)
+- Accounts: Supabase (PostgreSQL + Storage), Upstash (Redis), Brevo (Email)
+
+### Backend Setup
 ```bash
 cd backend
-python -m venv venv
-source venv/Scripts/activate
-
+python -m venv venv && source venv/Scripts/activate  # Windows
 pip install -r requirements.txt
 
-# Cấu hình .env
-# Chạy script reset database
+# Configure environment
+cp .env.example .env  # Fill in Supabase, Redis, Brevo credentials
+
+# Initialize database
 python reset_db.py
+python seed_demo.py  # Creates demo account
 
-# Khởi chạy Server FastAPI
-uvicorn app.main:app --reload
+# Start API server
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
-# Khởi chạy Celery Worker
+# Start Celery worker (separate terminal)
 celery -A app.worker.celery_app worker --loglevel=info --pool=solo
 ```
 
-### 3. Cài đặt Frontend
+### Frontend Setup
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev  # Starts at http://localhost:5173
 ```
-Truy cập ứng dụng tại: `http://localhost:5173`.
+
+### AI Model Setup
+```bash
+# Install PyTorch with CUDA
+pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+# Install remaining ML dependencies
+pip install -r requirements.txt  # Root requirements.txt
+
+# Model checkpoints are auto-downloaded on first run:
+#   DiariZen  → HuggingFace Hub
+#   PhoWhisper → backend/app/ai_core/asr/checkpoints/
+#   Qwen GGUF → backend/app/ai_core/qwen/checkpoints/
+```
 
 ---
-*Dự án này là minh chứng rõ nét cho khả năng xây dựng kiến trúc hệ thống Microservices thu nhỏ, khả năng quản lý hàng đợi tác vụ nặng và kỹ năng giải quyết triệt để các vấn đề bảo mật phổ biến trong một ứng dụng Web Full-stack hiện đại.*
+
+## Performance Benchmarks
+
+Tested on a single NVIDIA RTX 4060 Laptop GPU (8GB VRAM):
+
+| Metric | Value |
+|--------|-------|
+| Diarization (DiariZen) | ~60s for 10-min audio |
+| ASR (PhoWhisper INT8) | ~70s for 10-min audio |
+| Summarization (Qwen 2.5-7B Q4) | ~15s per summary |
+| Total pipeline (10-min meeting) | ~2.5 minutes end-to-end |
+| Peak VRAM usage | ~6.2 GB |
+| Max supported audio length | 75 MB file size limit |
+
+---
+
+## License
+
+This project was built as a capstone/portfolio project. All rights reserved.
