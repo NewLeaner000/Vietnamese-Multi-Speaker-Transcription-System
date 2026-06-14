@@ -12,10 +12,10 @@ def send_verification_email(to_email: str, code: str, is_reset: bool = False):
         return
 
     if is_reset:
-        subject = "Mã khôi phục mật khẩu tài khoản Ani Assistant"
+        subject = "Mã khôi phục mật khẩu tài khoản Vimeet"
         body_text = "Bạn vừa yêu cầu khôi phục mật khẩu. Đây là mã xác thực (OTP) của bạn:"
     else:
-        subject = "Mã xác thực tài khoản Ani Assistant"
+        subject = "Mã xác thực tài khoản Vimeet"
         body_text = "Đây là mã xác thực (OTP) để hoàn tất việc đăng ký tài khoản của bạn:"
 
     body = f"""
@@ -26,7 +26,7 @@ def send_verification_email(to_email: str, code: str, is_reset: bool = False):
         <h1 style="color: #007bff; letter-spacing: 2px;">{code}</h1>
         <p>Mã này sẽ hết hạn trong 5 phút. Vui lòng không chia sẻ mã này cho bất kỳ ai.</p>
         <br/>
-        <p>Trân trọng,<br/>Đội ngũ Ani Assistant</p>
+        <p>Trân trọng,<br/>Đội ngũ Vimeet</p>
       </body>
     </html>
     """
@@ -41,7 +41,7 @@ def send_verification_email(to_email: str, code: str, is_reset: bool = False):
 
     payload = json.dumps({
       "sender": {
-        "name": "Ani Assistant",
+        "name": "Vimeet",
         "email": sender_email
       },
       "to": [
