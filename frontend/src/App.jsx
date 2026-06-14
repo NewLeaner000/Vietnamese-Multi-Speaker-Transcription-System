@@ -848,6 +848,7 @@ function App() {
                       onClick={(e) => {
                         e.stopPropagation();
                         setEditingJobId(job.id);
+                        setNewJobName(job.filename);
                       }}
                       title={t('rename')}
                       style={{ fontSize: '0.9rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text-primary)' }}
