@@ -88,6 +88,8 @@ function App() {
     }
   };
 
+
+
   const fetchTrash = async () => {
     if (!token) return;
     try {
@@ -332,16 +334,18 @@ function App() {
       // 2. Fetch summary
       const sRes = await fetch(`${API_BASE}/audio/jobs/${job.id}/summary`, { headers: { 'Authorization': `Bearer ${token}` } });
       const sData = await sRes.json();
-      if (sData.status === 'completed') {
-        setSummary(sData.data);
-      } else {
-        setSummary("Chưa có bản tóm tắt hoặc job bị lỗi.");
-      }
       
       setChatMessages([]);
       setIsPlaying(false);
       setCurrentTime(0);
-      setStatus('COMPLETED');
+
+      // Nếu đã có Transcripts nhưng chưa có bản Tóm tắt (hoặc đang lỗi), tự động ép chạy lại Tóm tắt AI
+      if (tData.data && tData.data.length > 0 && sData.status !== 'completed') {
+        setStatus('SUMMARIZING');
+      } else {
+        setSummary(sData.data);
+        setStatus('COMPLETED');
+      }
     } catch (e) {
       console.error(e);
       setStatus('ERROR');
