@@ -852,7 +852,7 @@ function App() {
                         if (e.key === 'Escape') setEditingJobId(null);
                       }}
                       onClick={(e) => e.stopPropagation()}
-                      style={{ width: '100%', fontSize: '0.9rem', padding: '0.1rem', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '4px' }}
+                      style={{ width: `${Math.max(4, newJobName.length + 1)}ch`, maxWidth: '100%', fontSize: '0.9rem', padding: '0.1rem', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '4px' }}
                     />
                   ) : (
                     <div 
