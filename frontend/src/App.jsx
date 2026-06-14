@@ -527,11 +527,20 @@ function App() {
   };
 
   const handleRenameJob = async (jobId, newName) => {
-    if (!newName.trim()) {
-      setEditingJobId(null);
+    const job = historyJobs.find(j => j.id === jobId);
+    
+    // Đóng chế độ edit ngay lập tức để tránh lỗi click file khác (Race condition)
+    setEditingJobId(null);
+    
+    // Nếu tên rỗng hoặc không đổi -> Bỏ qua
+    if (!newName.trim() || (job && job.filename === newName)) {
       return;
     }
+    
     try {
+      // Cập nhật giao diện lập tức (Optimistic Update)
+      setHistoryJobs(prev => prev.map(j => j.id === jobId ? { ...j, filename: newName } : j));
+      
       const res = await fetch(`${API_BASE}/audio/jobs/${jobId}/rename_job`, {
         method: 'PUT',
         headers: { 
@@ -540,13 +549,15 @@ function App() {
         },
         body: JSON.stringify({ new_filename: newName })
       });
-      if (res.ok) {
-        setHistoryJobs(prev => prev.map(j => j.id === jobId ? { ...j, filename: newName } : j));
+      
+      if (!res.ok) {
+        // Nếu server lỗi, roll back lại dữ liệu cũ
+        fetchHistory();
       }
     } catch (e) {
       console.error(e);
+      fetchHistory();
     }
-    setEditingJobId(null);
   };
 
   const handleMoveToTrash = async (jobId) => {
