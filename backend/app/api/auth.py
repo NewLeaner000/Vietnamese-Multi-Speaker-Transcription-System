@@ -83,11 +83,11 @@ def logout(request: Request):
 def register(user_in: UserCreate, session: Session = Depends(get_session)):
     """
     API Đăng ký:
-    1. Nhận JSON từ Client (user_in).
-    2. Kiểm tra trùng lặp.
-    3. Băm mật khẩu (get_password_hash).
-    4. Lưu vào PostgreSQL.
+    - Nhận dữ liệu gồm username, email, password và mã xác thực (OTP).
+    - Kiểm tra xem username và email đã tồn tại chưa.
+    - Mã hóa mật khẩu (băm) để lưu vào CSDL an toàn.
     """
+    user_in.email = user_in.email.lower().strip()
     # Kiểm tra Username đã có ai xài chưa
     user_exists = session.exec(select(User).where(User.username == user_in.username)).first()
     if user_exists:
@@ -138,11 +138,18 @@ def register(user_in: UserCreate, session: Session = Depends(get_session)):
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_session)):
     """
-    API Đăng nhập: Trả về chiếc vé thông hành JWT (Token)
+    API Đăng nhập: Trả về Access Token (JWT).
+    Dùng OAuth2PasswordRequestForm nghĩa là Frontend phải gửi dữ liệu dạng form (x-www-form-urlencoded)
+    với 2 trường: 'username' và 'password'.
+    Chúng ta hỗ trợ đăng nhập bằng cả username hoặc email.
     """
-    # 1. Tìm user trong DB theo username
-    user = session.exec(select(User).where(User.username == form_data.username)).first()
+    login_id = form_data.username.strip()
+    login_id_lower = login_id.lower()
     
+    # 1. Tìm user trong Database theo username hoặc email
+    user = session.exec(select(User).where(
+        (User.username == login_id) | (User.email == login_id_lower)
+    )).first()
     # 2. Kiểm tra user có tồn tại và mật khẩu có đúng không
     if not user or not verify_password(form_data.password, user.hashed_password):
         # Trả về lỗi 401 Unauthorized nếu sai pass
@@ -164,16 +171,23 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = D
     }
 
 # ----------------- QUÊN MẬT KHẨU -----------------
-@router.post("/forgot-password")
-def forgot_password(req: VerificationRequest, background_tasks: BackgroundTasks, session: Session = Depends(get_session)):
-    # 1. Kiểm tra xem email có trong DB không
+@router.post("/send-verification-code")
+def send_verification_code(req: VerificationRequest, background_tasks: BackgroundTasks, session: Session = Depends(get_session)):
+    req.email = req.email.lower().strip()
+    # Kiểm tra xem email đã tồn tại chưa
     user = session.exec(select(User).where(User.email == req.email)).first()
     if not user:
         raise HTTPException(status_code=404, detail="Email này chưa được đăng ký trong hệ thống")
 
+    # 1.5. Rate Limit chống dội bom Email (60 giây)
+    cooldown = redis_client.get(f"email_cooldown:{req.email}")
+    if cooldown:
+        raise HTTPException(status_code=429, detail="Bạn thao tác quá nhanh. Vui lòng chờ 60 giây trước khi yêu cầu gửi lại mã OTP.")
+
     # 2. Tạo mã OTP mới
     code = f"{random.randint(100000, 999999)}"
     redis_client.setex(f"reset_code:{req.email}", 300, code)
+    redis_client.setex(f"email_cooldown:{req.email}", 60, "1")
     
     # 3. Gửi OTP qua email (tái sử dụng hàm send_verification_email)
     background_tasks.add_task(send_verification_email, req.email, code, True)
@@ -181,10 +195,19 @@ def forgot_password(req: VerificationRequest, background_tasks: BackgroundTasks,
 
 @router.post("/reset-password")
 def reset_password(req: ResetPasswordRequest, session: Session = Depends(get_session)):
+    req.email = req.email.lower().strip()
+    
+    # Chống Brute-force OTP cho tính năng Đổi Mật Khẩu
+    attempts = redis_client.get(f"otp_attempts_reset:{req.email}")
+    if attempts and int(attempts) >= 5:
+        raise HTTPException(status_code=429, detail="Bạn đã nhập sai OTP quá nhiều lần. Vui lòng thử lại sau 15 phút.")
+        
     # 1. Kiểm tra OTP
     if req.verification_code != "123456":
         stored_code = redis_client.get(f"reset_code:{req.email}")
         if not stored_code or stored_code != req.verification_code:
+            redis_client.incr(f"otp_attempts_reset:{req.email}")
+            redis_client.expire(f"otp_attempts_reset:{req.email}", 900) # Cấm 15 phút
             raise HTTPException(status_code=400, detail="Mã xác thực không hợp lệ hoặc đã hết hạn")
             
     # 2. Lấy user và đổi pass
@@ -209,7 +232,7 @@ def google_login(req: GoogleLoginRequest, session: Session = Depends(get_session
         # Xác minh Token từ Google
         idinfo = id_token.verify_oauth2_token(req.credential, google_requests.Request(), GOOGLE_CLIENT_ID)
         
-        email = idinfo['email']
+        email = idinfo['email'].lower().strip()
         name = idinfo.get('name', email.split('@')[0])
         
         # Kiểm tra user trong DB

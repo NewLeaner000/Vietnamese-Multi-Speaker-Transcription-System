@@ -67,7 +67,11 @@ from fastapi.middleware.cors import CORSMiddleware
 # Cấu hình CORS cho phép Frontend (Vite chạy cổng 5173) gọi API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://vietnamese-multi-speaker-transcription.onrender.com",
+        "https://vietnamese-multi-speaker-transcript.vercel.app"
+    ],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
