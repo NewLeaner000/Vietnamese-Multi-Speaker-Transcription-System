@@ -121,6 +121,7 @@ input, select, textarea {
   display: flex;
   overflow: hidden;
   position: relative;
+  min-height: 0;
 }
 
 /* Single column for Upload */
@@ -348,10 +349,9 @@ input, select, textarea {
 
   /* Reset flex ratio and force full width */
   .left-pane, .right-pane {
-    flex: 1 !important;
+    flex: 1 1 0% !important; /* Bắt buộc flexbox chia đều không gian còn lại */
     width: 100% !important;
-    height: 0 !important; /* Ép flex-child tuân thủ chiều cao container để scroll */
-    min-height: 0 !important;
+    min-height: 0 !important; /* Chống phình to quá giới hạn */
     padding: 1rem !important;
   }
   
