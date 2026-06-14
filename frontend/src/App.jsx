@@ -1057,11 +1057,11 @@ function App() {
             <>
               {/* Mobile Tabs */}
               <div className="mobile-tabs" style={{ display: 'none', width: '100%', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-panel)' }}>
-                 <button onClick={() => setMobileTab('transcript')} style={{ flex: 1, padding: '1rem', background: mobileTab === 'transcript' ? 'var(--bg-hover)' : 'transparent', color: mobileTab === 'transcript' ? 'var(--accent-primary)' : 'var(--text-secondary)', fontWeight: 600, borderBottom: mobileTab === 'transcript' ? '2px solid var(--accent-primary)' : 'none' }}>
-                   {file ? file.name : (historyJobs.find(j => j.id === selectedJobId)?.filename || t('transcriptTab'))}
+                 <button onClick={() => setMobileTab('transcript')} style={{ flex: 1, padding: '1rem', background: mobileTab === 'transcript' ? 'var(--bg-hover)' : 'transparent', color: mobileTab === 'transcript' ? 'var(--accent-primary)' : 'var(--text-secondary)', borderBottom: mobileTab === 'transcript' ? '2px solid var(--accent-primary)' : 'none', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                   <FileText size={24} />
                  </button>
-                 <button onClick={() => setMobileTab('chatbot')} style={{ flex: 1, padding: '1rem', background: mobileTab === 'chatbot' ? 'var(--bg-hover)' : 'transparent', color: mobileTab === 'chatbot' ? 'var(--accent-primary)' : 'var(--text-secondary)', fontWeight: 600, borderBottom: mobileTab === 'chatbot' ? '2px solid var(--accent-primary)' : 'none' }}>
-                   Chatbot & {t('summaryTab')}
+                 <button onClick={() => setMobileTab('chatbot')} style={{ flex: 1, padding: '1rem', background: mobileTab === 'chatbot' ? 'var(--bg-hover)' : 'transparent', color: mobileTab === 'chatbot' ? 'var(--accent-primary)' : 'var(--text-secondary)', borderBottom: mobileTab === 'chatbot' ? '2px solid var(--accent-primary)' : 'none', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                   <Bot size={24} />
                  </button>
               </div>
 
