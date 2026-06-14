@@ -603,8 +603,19 @@ function App() {
   // ==========================================
   if (!token) {
     return (
-      <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center' }}>
-        <div className="upload-card fade-in" style={{ maxWidth: '400px', padding: '2rem' }}>
+      <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        {/* Top Right Controls */}
+        <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <button className="theme-toggle" onClick={() => setLang(lang === 'vi' ? 'en' : 'vi')} title="Ngôn ngữ / Language">
+            <Languages size={20} />
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, marginLeft: '4px' }}>{lang.toUpperCase()}</span>
+          </button>
+          <button className="theme-toggle" onClick={toggleTheme}>
+            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+          </button>
+        </div>
+
+        <div className="upload-card fade-in" style={{ maxWidth: '400px', padding: '2rem', marginTop: '2rem' }}>
           <MessageSquare color="var(--accent-primary)" size={48} style={{ margin: '0 auto 1rem' }} />
           <h2 style={{ marginBottom: '1.5rem', textAlign: 'center' }}>{isLoginView ? t('loginTitle') : t('registerTitle')}</h2>
           
