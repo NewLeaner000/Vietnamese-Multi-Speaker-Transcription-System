@@ -841,19 +841,24 @@ function App() {
                 <History size={16} color="var(--text-secondary)" style={{minWidth: '16px'}} />
                 <div style={{ overflow: 'hidden', flexGrow: 1 }}>
                   {editingJobId === job.id ? (
-                    <input 
-                      type="text" 
-                      autoFocus
-                      value={newJobName}
-                      onChange={(e) => setNewJobName(e.target.value)}
-                      onBlur={() => handleRenameJob(job.id, newJobName)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleRenameJob(job.id, newJobName);
-                        if (e.key === 'Escape') setEditingJobId(null);
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      style={{ width: `${Math.max(4, newJobName.length + 1)}ch`, maxWidth: '100%', fontSize: '0.9rem', padding: '0.1rem', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '4px' }}
-                    />
+                    <div style={{ display: 'inline-grid', alignItems: 'center', justifyItems: 'start' }}>
+                      <span style={{ visibility: 'hidden', gridArea: '1 / 1 / 2 / 2', whiteSpace: 'pre', padding: '0.1rem', fontSize: '0.9rem', border: '1px solid transparent' }}>
+                        {newJobName || ' '}
+                      </span>
+                      <input 
+                        type="text" 
+                        autoFocus
+                        value={newJobName}
+                        onChange={(e) => setNewJobName(e.target.value)}
+                        onBlur={() => handleRenameJob(job.id, newJobName)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleRenameJob(job.id, newJobName);
+                          if (e.key === 'Escape') setEditingJobId(null);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ gridArea: '1 / 1 / 2 / 2', width: '100%', minWidth: '30px', fontSize: '0.9rem', padding: '0.1rem', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '4px' }}
+                      />
+                    </div>
                   ) : (
                     <div 
                       onClick={(e) => {
