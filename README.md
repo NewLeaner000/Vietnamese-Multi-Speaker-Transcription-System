@@ -409,7 +409,7 @@ Tested on a single NVIDIA RTX 4060 Laptop GPU (8GB VRAM):
 This project was developed as an AI Capstone Project at FPT University (AIP491-SP26AI91).
 
 **Group Members:**
-- Tran Nguyen Quang Khang (Leader) - SE183747
+- Tran Nguyen Quang Khang - SE183747
 - Nguyen Duy Phuong - SE183477
 - Truong Minh Sang - SE184204
 - Ho Khanh Duy - SE184539
