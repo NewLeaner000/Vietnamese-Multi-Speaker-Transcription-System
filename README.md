@@ -159,6 +159,43 @@ flowchart LR
 
 ---
 
+## Model Fine-Tuning & Evaluation (Diarization)
+
+To adapt the diarization model to the specific acoustic conditions of noisy Vietnamese meetings, we performed extensive fine-tuning on the **DiariZen** (`BUT-FIT/diarizen-wavlm-large-s80-md-v2`) base model.
+
+### Fine-Tuning Strategy
+- **Head Replacement:** The original powerset softmax classification head was replaced with a new linear layer followed by sigmoid activation, switching the output space to a per-speaker multilabel format (supporting up to 4 simultaneous speakers per chunk).
+- **Loss Function:** Permutation Invariant Training (PIT) combined with multilabel Binary Cross-Entropy (BCE).
+- **Gradual Unfreezing:** To prevent catastrophic forgetting of the robust WavLM Large backbone (316M parameters), a three-phase gradual unfreezing strategy was applied:
+  - *Phase 1:* Unfreeze top 4 layers (anchor).
+  - *Phase 2:* Unfreeze top 6 layers with data augmentation (overlap & noise).
+  - *Phase 3:* Unfreeze top 6 layers for final consolidation.
+
+### Diarization Accuracy Comparison (Baseline vs. Fine-Tuned)
+The fine-tuning process yielded substantial improvements in Diarization Error Rate (DER) across both synthetic and real-world in-the-wild datasets. 
+
+#### 1. Synthetic Data (Controlled Overlap & Noise)
+| Metric | Baseline | Fine-Tuned (Best) | Improvement |
+|--------|----------|-------------------|-------------|
+| **Overall DER** | 30.10% | **13.79%** | **- 16.31%** |
+| Missed Speech | 15.38% | **1.13%** | - 14.25% |
+| Speaker Confusion | 6.79% | **2.92%** | - 3.87% |
+
+*Note: The dramatic reduction in Missed Speech (-14.25%) ensures that downstream ASR receives complete audio segments without losing conversational content.*
+
+#### 2. Real-world Self-Labeled Data (In-the-wild)
+Evaluated on manually labeled YouTube Vietnamese talk shows and podcasts containing heavy background noise, music, and overlapping speech.
+
+| Domain (Dataset) | Baseline DER | Fine-Tuned DER | Relative Error Reduction |
+|------------------|--------------|----------------|--------------------------|
+| Chuyen Ho (Podcast) | 50.80% | **32.74%** | 35.5% |
+| Coi Mo (Conversation) | 72.40% | **51.04%** | 29.5% |
+| Dustin (Vlog/Outdoor) | 44.07% | **24.51%** | 44.3% |
+| VIF (News/Studio) | 18.24% | **6.61%** | 63.7% |
+| **Average** | **46.37%** | **28.72%** | **38.0%** |
+
+---
+
 ## Security Architecture
 
 ```mermaid
