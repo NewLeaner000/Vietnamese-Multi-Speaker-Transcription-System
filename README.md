@@ -194,6 +194,41 @@ Evaluated on manually labeled YouTube Vietnamese talk shows and podcasts contain
 | VIF (News/Studio) | 18.24% | **6.61%** | 63.7% |
 | **Average** | **46.37%** | **28.72%** | **38.0%** |
 
+<br/>
+
+## Model Fine-Tuning & Evaluation (ASR - PhoWhisper)
+
+To enhance Vietnamese speech recognition under noisy conditions and resolve Whisper's inherent hallucination issues, we applied a specialized fine-tuning pipeline on the **PhoWhisper-large** (`vinai/PhoWhisper-large`) base model.
+
+### Fine-Tuning Strategy
+- **Partial Unfreezing (LoRA-inspired):** To avoid catastrophic forgetting and fit training within a single 24GB VRAM GPU, we froze the entire model except for the query (`q_proj`) and value (`v_proj`) projection matrices across all Attention modules. This reduced trainable parameters to just ~0.8%.
+- **Two-Stage Curriculum Learning:**
+  - *Stage 1 (Clean Adaptation):* Trained on high-quality, low-overlap (≤ 18%) audio to build a strong linguistic anchor. (Learning Rate: 1e-4)
+  - *Stage 2 (Robustness Tuning):* Trained on heavy-noise and high-overlap (≤ 30%) audio to teach the model to make informed guesses under distortion. (Learning Rate: 2e-5)
+- **Data Deduplication & Preprocessing:** Applied strict Unicode NFC normalization to prevent encoding mismatches, and a 2-pass deduplication (within-file and cross-file) to eliminate repeated audio chunks, which is the primary root cause of Whisper's infinite looping hallucinations.
+
+### ASR Accuracy Comparison (Baseline vs. Fine-Tuned)
+Evaluated on a diverse test set of 1,655 samples spanning 5 different acoustic domains (talk shows, vlogs, podcasts). Word Error Rate (WER) is decomposed into Substitutions (S), Deletions (D), and Insertions (I).
+
+#### Overall WER & Hallucination Reduction
+| Error Type | Base Model | Fine-Tuned (Stage 2) | Absolute Change |
+|------------|------------|----------------------|-----------------|
+| **Overall WER** | **18.72%** | **13.01%** | **- 5.71%** |
+| Substitutions (S) | 7.50% | 5.69% | - 1.81% |
+| Deletions (D) | 3.93% | 4.29% | + 0.36% |
+| **Insertions (I)** | **7.29%** | **3.03%** | **- 4.26%** |
+
+*Note: Insertions represent AI "hallucinations" (generating words not present in the audio). The fine-tuning strategy successfully reduced hallucinations by 58.5% (from 7.29% to 3.03%), significantly increasing the reliability of the transcript.*
+
+#### Results by Acoustic Domain
+| Domain (Dataset) | Base WER | Fine-Tuned WER | Relative Error Reduction |
+|------------------|----------|----------------|--------------------------|
+| VIF (News/Studio) | 14.97% | **6.48%** | 56.7% |
+| Conan (Anime Dub) | 11.86% | **7.38%** | 37.8% |
+| Dustin (Vlog/Outdoor) | 20.00% | **13.62%** | 31.9% |
+| Chuyen Ho (Podcast) | 19.22% | **16.93%** | 11.9% |
+| Coi Mo (Heavy Overlap) | 24.73% | **19.96%** | 19.3% |
+
 ---
 
 ## Security Architecture
