@@ -350,7 +350,8 @@ input, select, textarea {
   .left-pane, .right-pane {
     flex: 1 !important;
     width: 100% !important;
-    height: auto !important;
+    height: 0 !important; /* Ép flex-child tuân thủ chiều cao container để scroll */
+    min-height: 0 !important;
     padding: 1rem !important;
   }
   
