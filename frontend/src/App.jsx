@@ -644,7 +644,7 @@ function App() {
             {activeTab === 'history' && historyJobs.map(job => (
               <div 
                 key={job.id} 
-                onClick={() => { if (editingJobId !== job.id) loadPastJob(job.id); }}
+                onClick={() => { if (editingJobId !== job.id) loadPastJob(job); }}
                 style={{
                   padding: '0.75rem',
                   borderRadius: '6px',
