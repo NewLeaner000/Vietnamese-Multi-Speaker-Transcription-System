@@ -381,10 +381,14 @@ pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu121
 # Install remaining ML dependencies
 pip install -r requirements.txt  # Root requirements.txt
 
-# Model checkpoints are auto-downloaded on first run:
-#   DiariZen  → HuggingFace Hub
-#   PhoWhisper → backend/app/ai_core/asr/checkpoints/
-#   Qwen GGUF → backend/app/ai_core/qwen/checkpoints/
+# 📥 Download Fine-tuned Models (DER & ASR)
+# Due to large file sizes, please download the trained model checkpoints from Google Drive:
+# 👉 Link: https://drive.google.com/drive/folders/1pjW941P41BSZlNZcP9fkC1-t1TEVFptG?usp=sharing
+# 
+# After downloading, extract and place them in the following directories:
+#   DiariZen (DER)    → backend/app/ai_core/der/checkpoints/
+#   PhoWhisper (ASR)  → backend/app/ai_core/asr/checkpoints/
+#   Qwen GGUF         → backend/app/ai_core/qwen/checkpoints/
 ```
 
 ---
