@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session, select
 
@@ -25,8 +25,9 @@ redis_client = redis.from_url(
 )
 
 @router.post("/send-verification-code")
-def send_code(req: VerificationRequest):
+def send_code(req: VerificationRequest, background_tasks: BackgroundTasks):
     # Kiểm tra Email có tồn tại thật (MX Records) hay không
+    # Tắt check_deliverability để tăng tốc độ nếu cần, nhưng MX record check thường mất ~1s
     try:
         validate_email(req.email, check_deliverability=True)
     except EmailNotValidError as e:
@@ -42,8 +43,9 @@ def send_code(req: VerificationRequest):
     code = f"{random.randint(100000, 999999)}"
     redis_client.setex(f"verify_code:{req.email}", 300, code)
     
-    send_verification_email(req.email, code)
-    return {"message": "Mã xác thực đã được gửi tới email của bạn"}
+    # Bỏ việc gửi Email vào BackgroundTask để API trả về kết quả ngay lập tức (không bắt user đợi)
+    background_tasks.add_task(send_verification_email, req.email, code)
+    return {"message": "Mã xác thực đang được gửi tới email của bạn"}
 
 @router.post("/register", response_model=UserResponse)
 def register(user_in: UserCreate, session: Session = Depends(get_session)):
