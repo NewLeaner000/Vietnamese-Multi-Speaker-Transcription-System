@@ -183,7 +183,17 @@ function App() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      if (token) {
+        await fetch(`${API_URL}/api/auth/logout`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      }
+    } catch (e) {
+      console.error("Lỗi khi đăng xuất khỏi máy chủ", e);
+    }
     setToken(null);
     setHistoryJobs([]);
     setTrashJobs([]);

@@ -27,10 +27,23 @@ async def upload_audio(
     """
     API Nhận file âm thanh từ User. Bắt buộc nhập số người nói.
     """
-    # 1. Tải và lưu file xuống ổ cứng Server
+    # 0. Kiểm tra định dạng file (Chống mã độc)
+    allowed_extensions = ('.wav', '.mp3', '.m4a', '.flac', '.mp4', '.mkv', '.ogg')
+    if not file.filename.lower().endswith(allowed_extensions):
+        raise HTTPException(status_code=400, detail="Chỉ hỗ trợ upload file âm thanh hoặc video (.wav, .mp3, .m4a, .mp4, v.v...)")
+
+    # 1. Tải và lưu file xuống ổ cứng Server (Kiểm tra dung lượng 75MB)
+    MAX_FILE_SIZE = 75 * 1024 * 1024 # 75MB
+    if file.size and file.size > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="Dung lượng file vượt quá giới hạn 75MB.")
+
     file_path = os.path.join(UPLOAD_DIR, file.filename)
     with open(file_path, "wb") as f:
         content = await file.read()
+        if len(content) > MAX_FILE_SIZE:
+            f.close()
+            os.remove(file_path)
+            raise HTTPException(status_code=413, detail="Dung lượng file vượt quá giới hạn 75MB.")
         f.write(content)
         
     final_filename = file.filename

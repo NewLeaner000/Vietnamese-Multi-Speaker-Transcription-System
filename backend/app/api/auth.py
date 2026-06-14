@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session, select
 
 from app.db.database import get_session
 from app.models.user import User
 from app.schemas.user import UserCreate, UserResponse, VerificationRequest
-from app.core.security import get_password_hash, verify_password, create_access_token
+from app.core.security import get_password_hash, verify_password, create_access_token, get_current_user
 from app.core.email import send_verification_email
 import redis
 import random
@@ -40,12 +40,40 @@ def send_code(req: VerificationRequest, background_tasks: BackgroundTasks):
         if email_exists:
             raise HTTPException(status_code=400, detail="Email này đã được đăng ký")
     
+    # Chống Brute-force: Kiểm tra xem user này có đang bị cấm do nhập sai OTP quá 5 lần không
+    attempts = redis_client.get(f"otp_attempts:{req.email}")
+    if attempts and int(attempts) >= 5:
+        raise HTTPException(status_code=429, detail="Bạn đã nhập sai OTP quá nhiều lần. Vui lòng thử lại sau 15 phút.")
+
     code = f"{random.randint(100000, 999999)}"
     redis_client.setex(f"verify_code:{req.email}", 300, code)
     
     # Bỏ việc gửi Email vào BackgroundTask để API trả về kết quả ngay lập tức (không bắt user đợi)
     background_tasks.add_task(send_verification_email, req.email, code)
     return {"message": "Mã xác thực đang được gửi tới email của bạn"}
+
+@router.get("/me", response_model=UserResponse)
+def get_me(session: Session = Depends(get_session), current_user_id: int = Depends(get_current_user)):
+    """
+    API Lấy thông tin cá nhân: 
+    Cần phải truyền JWT Token (do get_current_user yêu cầu).
+    """
+    user = session.get(User, current_user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
+    return user
+
+@router.post("/logout")
+def logout(request: Request):
+    """
+    API Đăng xuất: Đưa JWT Token hiện tại vào Danh sách đen (Blacklist).
+    """
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+        # Thêm token vào danh sách đen trong 2 giờ (bằng thời gian sống tối đa của token)
+        redis_client.setex(f"blacklist_token:{token}", 7200, "true")
+    return {"message": "Đăng xuất thành công"}
 
 @router.post("/register", response_model=UserResponse)
 def register(user_in: UserCreate, session: Session = Depends(get_session)):
@@ -66,11 +94,20 @@ def register(user_in: UserCreate, session: Session = Depends(get_session)):
     if email_exists:
         raise HTTPException(status_code=400, detail="Email này đã được đăng ký")
         
+    # Chống Brute-force
+    attempts = redis_client.get(f"otp_attempts:{user_in.email}")
+    if attempts and int(attempts) >= 5:
+        raise HTTPException(status_code=429, detail="Bạn đã nhập sai OTP quá nhiều lần. Vui lòng thử lại sau 15 phút.")
+
     # 1. Kiểm tra mã xác thực
     if user_in.verification_code != "123456":
         stored_code = redis_client.get(f"verify_code:{user_in.email}")
         if not stored_code or stored_code != user_in.verification_code:
+            # Tăng số lần nhập sai
+            redis_client.incr(f"otp_attempts:{user_in.email}")
+            redis_client.expire(f"otp_attempts:{user_in.email}", 900) # Cấm 15 phút
             raise HTTPException(status_code=400, detail="Mã xác thực không hợp lệ hoặc đã hết hạn")
+    
     
     # Xóa mã OTP sau khi dùng thành công
     redis_client.delete(f"verify_code:{user_in.email}")

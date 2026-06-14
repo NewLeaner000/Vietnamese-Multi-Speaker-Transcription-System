@@ -37,13 +37,33 @@ def create_access_token(data: dict) -> str:
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+import redis
+import ssl
+from app.core.config import settings
+
+is_secure = settings.REDIS_URL.startswith("rediss://")
+redis_client = redis.from_url(
+    settings.REDIS_URL, 
+    decode_responses=True,
+    ssl_cert_reqs=ssl.CERT_REQUIRED if is_secure else None
+)
+
 def get_current_user(token: str = Depends(oauth2_scheme)):
-    """Dependency trích xuất user_id từ JWT Token."""
+    """Dependency trích xuất user_id từ JWT Token và kiểm tra danh sách đen (Blacklist)."""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Không thể xác thực thông tin đăng nhập",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    
+    # KHIẾM KHUYẾT 4: Kiểm tra Token có nằm trong sổ đen (đã Đăng xuất) hay không
+    if redis_client.exists(f"blacklist_token:{token}"):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Phiên đăng nhập đã kết thúc. Vui lòng đăng nhập lại.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: int = payload.get("user_id")
