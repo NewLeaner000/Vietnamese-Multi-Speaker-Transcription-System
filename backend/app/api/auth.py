@@ -231,9 +231,18 @@ def google_login(req: GoogleLoginRequest, session: Session = Depends(get_session
                 email=email,
                 hashed_password=hashed_pwd
             )
-            session.add(user)
-            session.commit()
-            session.refresh(user)
+            try:
+                session.add(user)
+                session.commit()
+                session.refresh(user)
+            except Exception as e:
+                # Nếu có 2 Request gọi cùng 1 lúc (bấm đúp chuột), 
+                # Request 2 sẽ bị dính lỗi UniqueViolation (đã tồn tại email).
+                # Lúc này ta chỉ cần rollback và Select lại user đó là được!
+                session.rollback()
+                user = session.exec(select(User).where(User.email == email)).first()
+                if not user:
+                    raise HTTPException(status_code=500, detail="Lỗi hệ thống khi tạo tài khoản Google")
             
         # Trả về Token
         access_token = create_access_token(data={"user_id": user.id})
