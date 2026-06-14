@@ -1,7 +1,3 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Nền xanh dương bo góc đồng bộ với web -->
-  <rect width="512" height="512" rx="128" fill="#2563EB"/>
-  
-  <!-- Icon bong bóng chat màu trắng giống ảnh của bạn -->
-  <path fill="#FFFFFF" d="M432 304c0 17.6-14.4 32-32 32H165.3l-50.6 50.6c-9.1 9.1-24.7 2.7-24.7-10.2V336c-17.6 0-32-14.4-32-32V128c0-17.6 14.4-32 32-32h341.3c17.6 0 32 14.4 32 32v176z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
 </svg>
