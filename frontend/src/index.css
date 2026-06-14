@@ -392,13 +392,16 @@ input, select, textarea {
     z-index: 50;
     background: var(--bg-panel);
     padding: 1rem !important;
-    padding-bottom: 150px !important; /* Không để khung chat bị đè bởi audio player */
     flex-direction: column;
     overflow-y: hidden !important;
   }
   
   .right-pane.show-overlay {
     display: flex !important;
+  }
+
+  .hide-on-mobile-overlay {
+    display: none !important;
   }
   
   /* Make audio player responsive */

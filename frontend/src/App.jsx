@@ -1185,12 +1185,12 @@ function App() {
 
               {/* Bottom Audio Player Bar */}
               {audioError ? (
-                <div className="bottom-player fade-in" style={{ left: 0, justifyContent: 'center', background: 'var(--bg-hover)', color: 'var(--text-secondary)' }}>
+                <div className={`bottom-player fade-in ${showMobileChatbot ? 'hide-on-mobile-overlay' : ''}`} style={{ left: 0, justifyContent: 'center', background: 'var(--bg-hover)', color: 'var(--text-secondary)' }}>
                   <AlertCircle size={18} style={{ marginRight: '8px' }} />
                   <span style={{ fontSize: '0.9rem' }}>{t('audioAutoDeleted') || "File âm thanh gốc đã bị xóa tự động để tiết kiệm dung lượng (Văn bản vẫn được giữ lại)."}</span>
                 </div>
               ) : (
-                <div className="bottom-player fade-in" style={{ left: 0 }}>
+                <div className={`bottom-player fade-in ${showMobileChatbot ? 'hide-on-mobile-overlay' : ''}`} style={{ left: 0 }}>
                   {selectedJobId && (
                     <audio 
                       ref={audioRef}
