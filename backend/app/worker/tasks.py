@@ -7,13 +7,6 @@ from app.worker.celery_app import celery_app
 from app.db.database import engine
 from app.models.job import Job, JobStatus
 from app.models.user import User
-
-# [MLOps] Import Lõi AI từ thư mục ai_core
-from app.ai_core.pipeline_config import DER_SCRIPT_PATH, DER_CHECKPOINT_DEFAULT, DEFAULT_OUTPUT_DIR, ASR_CHECKPOINT_DEFAULT
-from app.ai_core.der_infer_bridge import run_der_pipeline
-from app.ai_core.asr_runner import prepare_engine_input, run_core_asr_engine
-from app.ai_core.audio_preprocess_input import normalize_audio_to_mono16k
-from app.core.storage import download_file_from_supabase
 import zipfile
 
 @celery_app.task(bind=True, name="process_audio")
@@ -21,7 +14,14 @@ def process_audio_task(self, job_id: int):
     """
     Hàm này được Celery kích hoạt để chạy AI thật sự!
     """
-
+    # [MLOps] Import Lõi AI từ thư mục ai_core ở bên trong hàm
+    # Để khi FastAPI trên Render tải file này, nó không bị sập vì thiếu Numpy/Torch
+    from app.ai_core.pipeline_config import DER_SCRIPT_PATH, DER_CHECKPOINT_DEFAULT, DEFAULT_OUTPUT_DIR, ASR_CHECKPOINT_DEFAULT
+    from app.ai_core.der_infer_bridge import run_der_pipeline
+    from app.ai_core.asr_runner import prepare_engine_input, run_core_asr_engine
+    from app.ai_core.audio_preprocess_input import normalize_audio_to_mono16k
+    from app.core.storage import download_file_from_supabase
+    
     with Session(engine) as session:
         job = session.get(Job, job_id)
         if not job:
