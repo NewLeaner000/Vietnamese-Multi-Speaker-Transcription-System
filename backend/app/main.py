@@ -19,6 +19,17 @@ async def lifespan(app: FastAPI):
     """
     print(" Dang ket noi PostgreSQL va khoi tao cac Bang (Tables)...")
     create_db_and_tables()
+    
+    # Tự động bật RLS (Row Level Security) cho toàn bộ các bảng 
+    # Điều này giúp dập tắt vĩnh viễn các cảnh báo (Advisor) khó chịu trên trang chủ Supabase
+    try:
+        with engine.begin() as conn:
+            from sqlmodel import SQLModel
+            for table_name in SQLModel.metadata.tables.keys():
+                conn.execute(text(f'ALTER TABLE "{table_name}" ENABLE ROW LEVEL SECURITY;'))
+    except Exception as e:
+        print("Migration note (RLS):", e)
+
     try:
         with engine.begin() as conn:
             conn.execute(text('ALTER TABLE job ADD COLUMN has_enrollment BOOLEAN DEFAULT FALSE'))
