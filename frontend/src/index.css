@@ -324,7 +324,7 @@ input, select, textarea {
 
   .main-content {
     flex-direction: column;
-    overflow: hidden;
+    overflow-y: auto;
     padding-bottom: 140px; /* Space for fixed bottom player */
   }
   
@@ -371,15 +371,15 @@ input, select, textarea {
     cursor: pointer;
   }
 
-  /* Reset flex ratio and force full width */
+  /* Trả lại cuộn tự nhiên cho Bản dịch */
   .left-pane {
-    flex: 1 1 0% !important;
+    flex: none !important;
     width: 100% !important;
-    min-height: 0 !important;
+    height: auto !important;
     padding: 1rem !important;
     border-right: none;
     border-bottom: 1px solid var(--border-color);
-    overflow-y: auto !important;
+    overflow-y: visible !important;
   }
   
   .right-pane {
@@ -392,6 +392,7 @@ input, select, textarea {
     z-index: 50;
     background: var(--bg-panel);
     padding: 1rem !important;
+    padding-bottom: 150px !important; /* Không để khung chat bị đè bởi audio player */
     flex-direction: column;
     overflow-y: hidden !important;
   }
