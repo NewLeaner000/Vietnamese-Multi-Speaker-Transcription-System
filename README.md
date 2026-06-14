@@ -404,6 +404,22 @@ Tested on a single NVIDIA RTX 4060 Laptop GPU (8GB VRAM):
 
 ---
 
+## Team & Contributors
+
+This project was developed as an AI Capstone Project at FPT University (AIP491-SP26AI91).
+
+**Group Members:**
+- Tran Nguyen Quang Khang (Leader) - SE183747
+- Nguyen Duy Phuong - SE183477
+- Truong Minh Sang - SE184204
+- Ho Khanh Duy - SE184539
+
+**Supervisors:**
+- Huynh Van Thong (ThongHV4)
+- Nguyen Hong Hai (HongNH51)
+
+---
+
 ## License
 
-This project was built as a capstone/portfolio project. All rights reserved.
+This project is licensed under the [MIT License](LICENSE) - see the [LICENSE](file:///d:/website/LICENSE) file for details.
