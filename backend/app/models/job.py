@@ -46,3 +46,6 @@ class Job(SQLModel, table=True):
     # Soft Delete (Thùng rác)
     is_deleted: bool = Field(default=False)
     deleted_at: Optional[datetime] = None
+
+    # Mã số tiến trình Celery (Dùng để kiểm tra tiến độ thanh màu xanh)
+    celery_task_id: Optional[str] = Field(default=None)

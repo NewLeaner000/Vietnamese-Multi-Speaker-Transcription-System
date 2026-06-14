@@ -10,7 +10,7 @@ celery_app = Celery(
     "ai_worker",
     broker=redis_url,
     backend=redis_url,
-    include=['app.worker.tasks'] # Báo cho Celery biết file nào chứa các tác vụ
+    include=['app.worker.tasks', 'app.worker.tasks_ai'] # Báo cho Celery biết file nào chứa các tác vụ
 )
 
 celery_app.conf.update(

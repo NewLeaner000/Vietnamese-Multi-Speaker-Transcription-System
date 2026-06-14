@@ -23,6 +23,13 @@ async def lifespan(app: FastAPI):
         with engine.begin() as conn:
             conn.execute(text('ALTER TABLE job ADD COLUMN has_enrollment BOOLEAN DEFAULT FALSE'))
     except Exception as e:
+        print("Migration note (has_enrollment):", e)
+        
+    try:
+        with engine.begin() as conn:
+            conn.execute(text('ALTER TABLE job ADD COLUMN celery_task_id VARCHAR'))
+    except Exception as e:
+        print("Migration note (celery_task_id):", e)
         print("Migration note:", e)
     print(" Da tao bang thanh cong!")
     import asyncio

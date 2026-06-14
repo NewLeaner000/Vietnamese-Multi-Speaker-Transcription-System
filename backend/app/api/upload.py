@@ -119,6 +119,11 @@ async def upload_audio(
     # Lệnh '.delay()' chính là chìa khóa của MLOps. Nó đẩy lệnh đi và thoát luôn, không chờ đợi.
     task = process_audio_task.delay(new_job.id)
     
+    # Lưu task_id vào DB để sau này Frontend có thể lấy lại thanh tiến độ
+    new_job.celery_task_id = task.id
+    session.add(new_job)
+    session.commit()
+    
     # 4. Trả kết quả về ngay lập tức cho User (Thời gian phản hồi < 0.1 giây)
     return {
         "message": "Đã đẩy file vào hàng chờ AI thành công!",
@@ -153,7 +158,8 @@ def get_job_status(job_id: int, session: Session = Depends(get_session)):
         "job_id": job.id,
         "filename": job.filename,
         "status": job.status,
-        "error": job.error_message
+        "error": job.error_message,
+        "celery_task_id": job.celery_task_id
     }
 
 from sqlmodel import select

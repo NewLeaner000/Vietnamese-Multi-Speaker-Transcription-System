@@ -310,19 +310,27 @@ function App() {
   }, [status, selectedJobId]);
 
   // 7. Load lại dữ liệu khi người dùng Click vào một Job cũ trong Sidebar
-  const loadPastJob = async (jobId) => {
+  // 7. Load lại dữ liệu khi người dùng Click vào một Job cũ trong Sidebar
+  const loadPastJob = async (job) => {
     setStatus('LOADING_PAST_JOB');
-    setSelectedJobId(jobId);
+    setSelectedJobId(job.id);
     setFile(null); // Không cần file gốc khi xem lịch sử
+    
+    // Nếu Job đang xử lý dở dang, ta lấy lại task_id để resume thanh tiến độ
+    if (job.status === 'pending' || job.status === 'processing') {
+      setStatus(job.status.toUpperCase());
+      setTaskId(job.celery_task_id);
+      return; // Không fetch transcript vội vì chưa xong
+    }
     
     try {
       // 1. Fetch transcript
-      const tRes = await fetch(`${API_BASE}/audio/jobs/${jobId}/transcripts`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const tRes = await fetch(`${API_BASE}/audio/jobs/${job.id}/transcripts`, { headers: { 'Authorization': `Bearer ${token}` } });
       const tData = await tRes.json();
       setTranscripts(tData.data || []);
       
       // 2. Fetch summary
-      const sRes = await fetch(`${API_BASE}/audio/jobs/${jobId}/summary`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const sRes = await fetch(`${API_BASE}/audio/jobs/${job.id}/summary`, { headers: { 'Authorization': `Bearer ${token}` } });
       const sData = await sRes.json();
       if (sData.status === 'completed') {
         setSummary(sData.data);
