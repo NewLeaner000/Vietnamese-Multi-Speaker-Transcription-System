@@ -314,13 +314,12 @@ input, select, textarea {
 .job-item .trash-btn { opacity: 0; transition: opacity 0.2s; }
 .job-item:hover .trash-btn { opacity: 1; }
 
+/* Ẩn các nút đặc thù của Mobile trên màn hình Desktop */
+.chatbot-fab { display: none; }
+.close-chatbot-btn { display: none; }
+
 /* Responsive Design (Mobile & Tablet Support) */
 @media (max-width: 1024px) {
-  .left-pane { flex: 6; padding-left: 2rem !important; padding-right: 2rem !important; }
-  .right-pane { flex: 4; }
-}
-
-@media (max-width: 768px) {
   .top-nav { padding: 0 1rem; }
 
   .main-content {
@@ -338,33 +337,67 @@ input, select, textarea {
     flex-shrink: 0;
   }
   
-  .mobile-tabs {
-    display: flex !important;
-    flex-shrink: 0;
+  /* Nút nổi Chatbot (FAB) */
+  .chatbot-fab {
+    display: flex;
+    position: fixed;
+    bottom: 160px; /* Nằm trên thanh player */
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    color: white;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 40;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s;
   }
   
-  .mobile-hidden {
-    display: none !important;
+  .chatbot-fab:active {
+    transform: scale(0.95);
+  }
+
+  /* Nút X tắt Chatbot */
+  .close-chatbot-btn {
+    display: flex;
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
   }
 
   /* Reset flex ratio and force full width */
-  .left-pane, .right-pane {
-    flex: 1 1 0% !important; /* Bắt buộc flexbox chia đều không gian còn lại */
-    width: 100% !important;
-    min-height: 0 !important; /* Chống phình to quá giới hạn */
-    padding: 1rem !important;
-  }
-  
   .left-pane {
+    flex: 1 1 0% !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    padding: 1rem !important;
     border-right: none;
     border-bottom: 1px solid var(--border-color);
     overflow-y: auto !important;
   }
   
   .right-pane {
-    overflow-y: hidden !important; /* Ẩn scroll tổng, chỉ scroll nội bộ chat/summary */
-    display: flex;
+    display: none !important; /* Ẩn mặc định trên mobile */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    background: var(--bg-panel);
+    padding: 1rem !important;
     flex-direction: column;
+    overflow-y: hidden !important;
+  }
+  
+  .right-pane.show-overlay {
+    display: flex !important;
   }
   
   /* Make audio player responsive */
