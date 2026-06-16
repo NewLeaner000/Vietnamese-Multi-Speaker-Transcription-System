@@ -5,7 +5,7 @@
 
   <br/>
 
-  <video src="demo.mp4" controls="controls" width="800"></video>
+  <video src="assets/demo.mp4" controls="controls" width="800"></video>
 
   <br/><br/>
 
