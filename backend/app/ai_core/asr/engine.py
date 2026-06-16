@@ -95,6 +95,33 @@ class TimingLogger:
         LOGGER.info("=" * 65)
 
 
+# ── Audio Cache ───────────────────────────────────────────────────────────────
+
+_AUDIO_CACHE = {}
+
+def get_cached_audio(audio_path: str, target_sr: int = 16000) -> Tuple[np.ndarray, int]:
+    """Load the full audio into memory exactly once and resample if needed."""
+    if audio_path not in _AUDIO_CACHE:
+        LOGGER.info("Đang nạp toàn bộ file audio lên RAM (1 lần duy nhất): %s", audio_path)
+        audio, sr = sf.read(audio_path)
+        if audio.ndim == 2:
+            audio = audio.mean(axis=1)
+            
+        if sr != target_sr:
+            LOGGER.info("Resampling từ %d Hz sang %d Hz...", sr, target_sr)
+            orig_len = len(audio)
+            new_len  = int(orig_len * target_sr / sr)
+            indices  = np.linspace(0, orig_len - 1, new_len)
+            audio    = np.interp(indices, np.arange(orig_len), audio).astype(np.float32)
+            sr = target_sr
+        else:
+            audio = audio.astype(np.float32)
+            
+        _AUDIO_CACHE[audio_path] = (audio, sr)
+        LOGGER.info("Nạp và chuẩn hóa audio thành công! (length=%d samples)", len(audio))
+    return _AUDIO_CACHE[audio_path]
+
+
 # ── Audio helpers ─────────────────────────────────────────────────────────────
 
 def load_audio_segment(
@@ -110,19 +137,16 @@ def load_audio_segment(
         start = start + trim_sec
         end   = end   - trim_sec
 
-    info        = sf.info(audio_path)
-    start_frame = max(0, int(start * info.samplerate))
-    end_frame   = int(end * info.samplerate)
-    audio, sr   = sf.read(audio_path, start=start_frame, stop=end_frame)
-    if audio.ndim == 2:
-        audio = audio.mean(axis=1)
-    if sr != target_sr:
-        # Resample using numpy linear interpolation (avoids torch/torchaudio dependency)
-        orig_len = len(audio)
-        new_len  = int(orig_len * target_sr / sr)
-        indices  = np.linspace(0, orig_len - 1, new_len)
-        audio    = np.interp(indices, np.arange(orig_len), audio)
-    return audio.astype(np.float32)
+    # Đọc siêu tốc từ bộ nhớ RAM (đã được nạp ở get_cached_audio)
+    full_audio, sr = get_cached_audio(audio_path, target_sr)
+    
+    start_frame = max(0, int(start * sr))
+    end_frame   = int(end * sr)
+    
+    # Cắt lát (slice) mảng Numpy thay vì mở lại ổ cứng
+    audio = full_audio[start_frame:end_frame]
+    
+    return audio
 
 
 def split_long_rttm_segments(

@@ -5,7 +5,13 @@
 
   <br/>
 
+  <video src="demo.mp4" controls="controls" width="800"></video>
+
+  <br/><br/>
+
   <a href="https://vietnamese-multi-speaker-transcript.vercel.app">Live Demo</a> · Demo Account: <code>demouser</code> / <code>123</code>
+  <br/>
+  <p><i><b>Note:</b> Due to budget constraints for GPU cloud hosting, the live demo is limited to viewing historical transcripts. To process new audio files, please clone the repository and run the AI backend locally on your machine.</i></p>
 </div>
 
 ---
