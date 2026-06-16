@@ -5,7 +5,8 @@
 
   <br/>
 
-  <h3><a https://github.com/user-attachments/assets/5b4f747c-87bf-4a85-a0c8-7eec6aae67f4 >Click here to watch the System Demo Video</a></h3>
+  https://github.com/user-attachments/assets/5b4f747c-87bf-4a85-a0c8-7eec6aae67f4
+
 
   <br/><br/>
 
