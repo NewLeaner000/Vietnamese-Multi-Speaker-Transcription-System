@@ -5,7 +5,7 @@
 
   <br/>
 
-  <h3><a href="https://github.com/NewLeaner000/Vietnamese-Multi-Speaker-Transcription-System/raw/main/assets/demo.mp4">Click here to watch the System Demo Video</a></h3>
+  <h3><a https://github.com/user-attachments/assets/5b4f747c-87bf-4a85-a0c8-7eec6aae67f4 >Click here to watch the System Demo Video</a></h3>
 
   <br/><br/>
 
